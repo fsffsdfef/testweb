@@ -1,0 +1,21 @@
+{
+  "files": [],
+  "noImplicitAny": false,
+  "allowJs": true,
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "strict": false,
+    "jsx": "preserve",
+    "moduleResolution": "node"
+  }
+}
+
