@@ -11,7 +11,7 @@ function registerBtn(){
     accountRef.value?.loginAccount()
   }
   else {
-   phoneRef.value?.phoneLogin()
+    phoneRef.value?.phoneLogin()
   }
 }
 </script>
@@ -57,7 +57,7 @@ function registerBtn(){
 <style scoped>
 .register-login {
   width: 400px;
-  //border: 1px solid #000000;
+//border: 1px solid #000000;
   border: 1px solid #ccc;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   padding: 20px;
@@ -73,5 +73,4 @@ function registerBtn(){
 :deep(.el-input__inner) {
   box-shadow: 0 0 0 1000px #fff inset;
 }
-
 </style>

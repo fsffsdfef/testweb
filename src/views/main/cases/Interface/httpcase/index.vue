@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Table from "@/views/main/cases/httpcase/table/table.vue"
+import Table from "@/views/main/cases/Interface/httpcase/table/table.vue"
 </script>
 
 <template>

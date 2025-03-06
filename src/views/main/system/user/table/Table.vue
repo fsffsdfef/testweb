@@ -2,8 +2,9 @@
 import CommonTable from "@/common/table/commonTable.vue";
 import {onMounted} from "@vue/runtime-core";
 import BaseRequest from "@/service";
-import {reactive, ref} from "vue";
+import {reactive} from "vue";
 const userDate = reactive({
+  tableDate: [],
   column: [
     {
       prop: "userId",
@@ -21,22 +22,21 @@ const userDate = reactive({
       prop: "phone",
       label: "手机号"
     }
-  ],
-  tableData: []
+  ]
 })
-
 onMounted(async ()=> {
-  const userData = await BaseRequest({
+  const data = await BaseRequest({
     url: 'user',
     method: 'GET'
   })
-  userDate.tableData = userData.data
+  userDate.tableDate = data.data
+  console.log(userDate)
 })
 
 </script>
 <template>
   <div>
-    <common-table :date="userDate"/>
+    <CommonTable :date="userDate"></CommonTable>
   </div>
 
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import useToken from '@/store/login/loginCounter'
+import useToken from '@/stores/login/loginCounter'
 const ruleForm = reactive({
   phone: '',
   verificationCode: ''
@@ -19,7 +19,6 @@ const token = useToken()
 function phoneLogin(){
   token.phone = ruleForm.phone
   token.verificationCode = ruleForm.verificationCode
-  console.log(token.token, token.verificationCode, token.phone)
 }
 defineExpose({
   phoneLogin

@@ -1,5 +1,4 @@
   <script setup lang="ts">
-import APIBase from "@/axios/apibase";
 
 </script>
 

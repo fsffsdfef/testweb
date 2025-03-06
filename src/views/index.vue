@@ -1,13 +1,18 @@
 <script setup lang="ts">
-
+import MenusView from "@/views/sidebar/MenusView.vue";
+import TopView from "@/views/top/TopView.vue";
 </script>
 
 <template>
   <el-container class="layout">
-    <el-aside class="aside" width="200px">Aside</el-aside>
+    <el-aside class="aside" width="200px">
+      <MenusView></MenusView>
+    </el-aside>
     <el-container>
-      <el-header class="header">Header</el-header>
-      <el-main class="main">Main</el-main>
+      <el-header class="header">
+        <TopView></TopView>
+      </el-header>
+      <el-main class="main"><router-view></router-view></el-main>
     </el-container>
   </el-container>
 </template>
@@ -18,14 +23,15 @@
 }
 
 .aside {
-  background-color: antiquewhite;
+
 }
 
 .header {
-  background-color: aquamarine;
+  background: #ffffff linear-gradient(-180deg, #e7edff 0%, rgba(255, 255, 255, 0.5) 100%);
+  display: flex;
 }
 
 .main {
-  background-color: azure;
+
 }
 </style>

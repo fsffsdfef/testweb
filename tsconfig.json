@@ -15,7 +15,8 @@
     "module": "esnext",
     "strict": false,
     "jsx": "preserve",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node"]
   }
 }
 

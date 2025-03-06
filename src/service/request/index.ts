@@ -6,7 +6,7 @@ import type {
     CreateRequestConfig,
 } from './type.ts'
 
-class Request {
+class Index {
     // axios 实例
     instance: AxiosInstance
     // 拦截器对象
@@ -95,5 +95,5 @@ class Request {
     }
 }
 
-export default Request
+export default Index
 export type{ RequestConfig, RequestInterceptors }

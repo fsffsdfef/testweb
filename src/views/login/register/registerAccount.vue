@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import {ElMessage} from "element-plus";
-import useToken from "@/store/login/loginCounter";
+import useToken from "@/stores/login/loginCounter";
 const use = useToken()
 const ruleForm = reactive({
   email: '',
