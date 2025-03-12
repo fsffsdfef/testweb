@@ -6,6 +6,7 @@ const props = defineProps({
     default: {
       tableDate: [],
       column: [],
+      port: [],
       indexKey: "",
       batchSetting: false,
       pullShow: false
@@ -19,15 +20,16 @@ const props = defineProps({
   }
 })
 const indexKey = props.date.indexKey
-console.log(`index`,indexKey)
+console.log(`index`, indexKey)
 </script>
 
 <template>
   <div v-if="date.tableDate.length>0">
-    <el-table :data="date.tableDate"
-              stripe
-              border
-              style="width: 100%">
+    <el-table
+        :data="date.tableDate"
+        :header-cell-style="{ background: '#ffffff linear-gradient(-180deg, #CCDDFF 0%, rgba(255, 255, 255, 0.5) 100%)' }"
+        border
+        style="width: 100%">
       <div>
         <el-table-column type="selection" align="center"/>
       </div>

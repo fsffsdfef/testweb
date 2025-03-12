@@ -2,11 +2,15 @@ import Request from './request'
 import {localCache} from "@/utils/localcache.ts";
 import type{ AxiosResponse } from 'axios'
 import type { RequestConfig } from './request/type.ts'
+import { ElMessage } from 'element-plus'
+import router from "@/router";
+import {jwtDecode} from "jwt-decode";
 
 export interface ResponseData<T> {
     statusCode: number
     desc: string
     data: T
+    msg: string
 }
 
 // 重写返回类型
@@ -21,9 +25,16 @@ const request = new Request({
     interceptors: {
         // 请求拦截器
         requestInterceptors: config => {
-            const token = localCache.getCache('token')
-            if (token && config.headers) {
-                config.headers.Authorization = `Bearer ${token}`
+            const token = localCache.getCache('token') ?? undefined
+            if (token){
+                const decode = jwtDecode(token)
+                const exp = decode?.exp
+                if (exp && exp < Date.now()/1000){
+                    router.push('/login')
+                }
+                if (config.headers) {
+                    config.headers.Authorization = `Bearer ${token}`
+                }
             }
             return config
 

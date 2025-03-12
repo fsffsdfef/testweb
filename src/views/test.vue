@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ywzRequest from "@/service";
-import CommonTable from "@/common/table/commonTable.vue";
+import CommonTable from "@/common/table/CommonTable.vue";
 async function getMenu() {
   const data = await ywzRequest({
     url: 'user/',

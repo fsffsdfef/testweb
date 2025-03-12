@@ -39,6 +39,10 @@ const routes: Array<RouteRecordRaw> = [
         path: "depart",
         name: "depart",
         component: ()=>import("@/views/main/system/depart/index.vue"),
+      },
+      {
+        path: "bussiness",
+        component: ()=>import("@/views/main/system/business/index.vue"),
       }
     ]
   },
@@ -48,7 +52,7 @@ const routes: Array<RouteRecordRaw> = [
     component: ()=>import("@/views/index.vue"),
     children: [
       {
-        path: "interface/httpcase",
+        path: "interfacecase",
         name: "httpcase",
         component: ()=>import("@/views/main/cases/Interface/httpcase/index.vue"),
       }

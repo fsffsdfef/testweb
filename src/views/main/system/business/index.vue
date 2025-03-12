@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import Table from "@/views/main/system/depart/table/table.vue";
+import Table from "@/views/main/system/business/table/Table.vue";
 </script>
 
 <template>

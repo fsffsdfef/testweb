@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import request from "@/service";
+import BaseRequest from "@/service";
 import router from "@/router";
 import {localCache} from "@/utils/localcache.ts";
 
@@ -15,16 +15,16 @@ const useToken = defineStore('counter', {
     },
     actions: {
         async loginAccount(account: {email: string, password: string}){
-
-            const loginResult = await request(
+            const loginResult = await BaseRequest(
                 {
                     url: 'login',
                     method: 'POST',
                     data: account
                 })
+            console.log(loginResult)
             const token = loginResult.data.token
             localCache.setCache('token', token)
-            const Menus = await request({
+            const Menus = await BaseRequest({
                 url: 'menu',
                 method: 'GET'
             })

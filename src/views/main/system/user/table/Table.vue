@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CommonTable from "@/common/table/commonTable.vue";
+import CommonTable from "@/common/table/CommonTable.vue";
 import {onMounted} from "@vue/runtime-core";
 import BaseRequest from "@/service";
 import {reactive} from "vue";
