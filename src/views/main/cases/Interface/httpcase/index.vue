@@ -1,48 +1,23 @@
 <script setup lang="ts">
 import Table from "@/views/main/cases/Interface/httpcase/table/table.vue"
 import Search from "@/views/main/cases/Interface/httpcase/search/search.vue";
-import searchCase from "@/views/main/cases/Interface/httpcase/search/search.vue";
-import {onMounted} from "@vue/runtime-core";
-import BaseRequest from "@/service";
 import {reactive, ref} from "vue";
+
 const dataLoaded = ref(false)
-const dataInfo = reactive({
-  tableDate: [],
-  portList: [],
-})
-const searchInfo = reactive({
-  caseSearch: {
-    caseName: null,
-    portId: "",
-    isCore: "all",
-    update_user: ""
-  },
-  searchModule: []
-})
-const searchCaseRef = ref<InstanceType<typeof searchCase>>()
-onMounted(async () => {
-  const httpCaseList = await BaseRequest({
-    url: 'httpcase',
-    method: 'GET'
-  })
-  const portData = await BaseRequest({
-    url: "port",
-    method: "GET"
-  })
-  dataInfo.tableDate = httpCaseList.data
-  dataInfo.portList = portData.data.list
-  dataLoaded.value = true
-})
+const contentRef = ref<InstanceType<typeof Table>>()
+function searchClick(data:any){
+  contentRef.value?.getTable(data)
+}
 </script>
 
 <template>
   <div class="common-layout">
     <el-container>
       <el-header>
-        <Search v-if="dataLoaded" :date="searchInfo" ref="searchCaseRef"></Search>
+        <Search @searchCase="searchClick"></Search>
       </el-header>
       <el-main>
-        <Table v-if="dataLoaded" :date="dataInfo"></Table>
+        <Table ref="contentRef"></Table>
       </el-main>
     </el-container>
   </div>
@@ -55,5 +30,9 @@ onMounted(async () => {
 }
 .el-main {
   height: 800%;
+}
+.itemcss {
+  display: flex;
+  align-items: center;
 }
 </style>

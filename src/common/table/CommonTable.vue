@@ -61,8 +61,8 @@ console.log(`index`, indexKey)
 
       <el-table-column label="操作" align="center">
         <template #default="scope">
-          <el-button :icon="Edit" @click="editFunction" round>编辑</el-button>
-          <el-button type="danger" :icon="Delete" @click="delFunction(scope.row)" round>删除</el-button>
+          <el-button type="primary" :icon="Edit" @click="editFunction" text>编辑</el-button>
+          <el-button type="danger" :icon="Delete" @click="delFunction(scope.row)" text>删除</el-button>
         </template>
       </el-table-column>
 

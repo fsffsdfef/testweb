@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import CommonTable from "@/common/table/CommonTable.vue";
-import {watch} from "@vue/runtime-core";
-import BaseRequest from "@/service";
 import {reactive, ref} from "vue";
-import type {CheckboxValueType} from 'element-plus'
 import {CirclePlusFilled, Download, Upload, Histogram} from "@element-plus/icons-vue";
+import type {CheckboxValueType} from 'element-plus'
 import CommonTool from "@/common/table/CommonTool.vue";
+import CommonTable from "@/common/table/CommonTable.vue";
+import interfaceCaseStore from "@/stores/main/case/interfaceCase";
+import {storeToRefs} from "pinia";
+
+const searchData = reactive({
+  "portId": "",
+  "caseName": null,
+  "isCore": "all",
+  "update_user": "更新人"
+})
 // 新增用例所需参数
 const httpCase = reactive({
       caseName: '',
@@ -138,14 +145,14 @@ const showType = [
     label: "是否为核心用例"
   },
 ]
-const props = defineProps({
-  date:{
-    default: {
-      tableDate: [],
-      portList: []
-    }
-  }
-})
+const tableStore = interfaceCaseStore()
+tableStore.getInterfaceCase(searchData)
+const {caseDataList} = storeToRefs(tableStore)
+function getTable(data:any){
+  console.log("天霸洞霸tua")
+  tableStore.getInterfaceCase(data)
+}
+
 // 用例列表展示参数
 const httpCaseDate = reactive({
   column: [
@@ -166,12 +173,10 @@ const httpCaseDate = reactive({
       label: "更新时间"
     }
   ],
-  tableDate: props.date.tableDate,
-  port: props.date.portList,
+  tableDate: caseDataList,
   batchSetting: true,
   pullShow: true
 })
-console.log("List", props.date.portList)
 // onMounted(async () => {
 //   const httpCaseList = await BaseRequest({
 //     url: 'httpcase',
@@ -222,10 +227,7 @@ const removeDomain = (item) => {
     httpCase.expressItem[0].expressList.splice(index, 1)
   }
 }
-
-function sendRequest(data){
-
-}
+defineExpose({ getTable })
 </script>
 <template>
 <!--  操作栏组件-->

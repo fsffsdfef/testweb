@@ -3,9 +3,15 @@ import type {RouteRecordRaw} from 'vue-router'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'home',
+    name: '/',
     component: ()=>import("@/views/index.vue"),
-
+    children: [
+      {
+        path: "home",
+        name: "home",
+        component: ()=>import("@/views/main/home/Home.vue"),
+      }
+    ]
   },
   {
     path: '/login',

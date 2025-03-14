@@ -3,22 +3,15 @@ import {reactive, ref} from "vue";
 import {onMounted} from "@vue/runtime-core";
 import BaseRequest from "@/service";
 import {Search} from "@element-plus/icons-vue";
-
+import interfaceCaseStore from "@/stores/main/case/interfaceCase";
+const tableCase = interfaceCaseStore()
+const emit = defineEmits(['searchCase'])
 const caseSearch = reactive({
-  caseName: null,
+  caseName: "",
   portId: "",
   isCore: "all",
-  update_user: "更新人"
+  update_user: ""
 })
-const props = defineProps({
-  date: {
-    default: {
-      tableDate: [],
-      portList: []
-    }
-  }
-})
-const options = ref([])
 onMounted(async () => {
   const portGroupData = await BaseRequest({
     url: "portGroup",
@@ -32,7 +25,7 @@ const cascaderProps = {
   children: "list",
   emitPath: false
 }
-
+const options = ref([])
 const core = [
   {
     label: "核心",
@@ -48,19 +41,9 @@ const core = [
   }
 ]
 
-async function searchCase(caseSearch) {
-  const caseDate = await BaseRequest({
-    url: "getCase",
-    method: "POST",
-    data: caseSearch
-  })
-  const newDefaults = { ...caseSearch.value }
-  props.date.tableDate = caseDate.data
-  console.log("ttttttttt", props.date.tableDate)
+function searchCase(){
+  emit('searchCase', caseSearch)
 }
-defineExpose({
-  searchCase
-})
 </script>
 
 <template>
@@ -88,19 +71,19 @@ defineExpose({
       </el-form-item>
       <el-form-item label="是否为核心">
         <el-select
-          v-model="caseSearch.isCore"
-          style="width: 300px"
+            v-model="caseSearch.isCore"
+            style="width: 300px"
         >
-            <el-option
-                v-for="option in core"
-                :key="option.value"
-                :label="option.label"
-                :value="option.value"
-            />
+          <el-option
+              v-for="option in core"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :icon="Search" @click="searchCase(caseSearch)">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="searchCase">查询</el-button>
       </el-form-item>
     </div>
   </el-form>
