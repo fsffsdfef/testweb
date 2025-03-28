@@ -41,9 +41,9 @@ const core = [
   }
 ]
 
-function searchCase(){
-  emit('searchCase', caseSearch)
-}
+  function searchCase(){
+    emit('searchCase', caseSearch)
+  }
 </script>
 
 <template>

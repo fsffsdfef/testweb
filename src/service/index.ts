@@ -50,7 +50,7 @@ const request = new Request({
  * @description: 函数的描述
  * @generic D 请求参数
  * @generic T 响应结构
- * @param {YWZRequestConfig} config 不管是GET还是POST请求都使用data
+ * @param {BaseRequestConfig} config 不管是GET还是POST请求都使用data
  * @returns {Promise}
  */
 const BaseRequest = <D = any, T = any>(config: BaseRequestConfig<D, T>) => {

@@ -149,7 +149,6 @@ const tableStore = interfaceCaseStore()
 tableStore.getInterfaceCase(searchData)
 const {caseDataList} = storeToRefs(tableStore)
 function getTable(data:any){
-  console.log("天霸洞霸tua")
   tableStore.getInterfaceCase(data)
 }
 

@@ -29,7 +29,7 @@ const useToken = defineStore('counter', {
                 method: 'GET'
             })
             localCache.setCache('menuList', Menus.data)
-            router.push("/about")
+            router.push("/home")
         },
         // loadLocalCacheAction(){
         //     const token = localCache.getCache("token")

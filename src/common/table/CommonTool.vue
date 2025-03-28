@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import {List} from "@element-plus/icons-vue";
 
 const props = defineProps({
-  btnList: {
-    default: []
-  },
-  switchFun: {
-    type: Function
-  },
-  addDialog: {
-    default: false
+  tools: {
+    default: {
+      btnList: [],
+      header: {
+        title: "列表",
+        icon: List
+      }
+    }
   }
 })
 </script>
@@ -16,15 +17,18 @@ const props = defineProps({
 <template>
   <div class="main">
     <div>
-      <span>域名：</span>
+      <el-text size="large" style="font-weight: bold">
+        <el-icon size="20"><List/></el-icon>
+        {{ tools.header.title}}
+      </el-text>
     </div>
     <div class="tool">
-      <div v-for="btn in btnList">
+      <div v-for="btn in tools.btnList">
         <el-button
+            type="primary"
             :icon="btn.icon"
             style="margin-right: 5px"
-            @click=btn.func
-            round
+            plain
         >
           {{ btn.btnName }}
         </el-button>

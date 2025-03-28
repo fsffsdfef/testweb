@@ -14,7 +14,6 @@ const interfaceCaseStore = defineStore("interfaceCase", {
                 data: data
             })
             this.caseDataList = caseData.data.list
-            console.log('aaaaaa', this.caseDataList)
         }
     }
 })
