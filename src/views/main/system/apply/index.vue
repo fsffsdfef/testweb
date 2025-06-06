@@ -4,8 +4,8 @@ import CommonTable from "@/common/module/table/CommonTable.vue";
 import CommonSearch from "@/common/module/table/CommonSearch.vue";
 import CommonModel from "@/common/module/operate/CommonModel.vue";
 import CommonPaginator from "@/common/module/table/CommonPaginator.vue";
-import addConfig from "@/views/main/cases/Interface/httpcase/configs/operation-config.ts";
-import httpCaseConfig from "@/views/main/cases/Interface/httpcase/configs/table-config.ts";
+import applyConfig from "@/views/main/system/apply/configs/table-config.ts"
+import addConfig from "@/views/main/system/apply/configs/operation-config.ts";
 
 const contentRef = ref<InstanceType<typeof CommonTable>>()
 const modelRef = ref<InstanceType<typeof CommonModel>>()
@@ -29,6 +29,7 @@ function updateEditModel(edit: string, data?: any){
 
 function modelSumbit(edit, data) {
   if (edit.value=='edit') {
+    console.log('diaoyongupdate')
     contentRef.value?.updateTable(data)
   }
   else {
@@ -41,7 +42,7 @@ function modelSumbit(edit, data) {
   <!--    搜索栏-->
   <div>
     <CommonSearch
-        :config="httpCaseConfig"
+        :config="applyConfig"
         @searchCase="search"
         @resetClick="reset"
     />
@@ -51,7 +52,7 @@ function modelSumbit(edit, data) {
 
     <CommonTable
         ref="contentRef"
-        :config="httpCaseConfig"
+        :config="applyConfig"
         @editAction="updateEditModel"
         @addAction="updateEditModel"
     />

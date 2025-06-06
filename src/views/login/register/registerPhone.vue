@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import useToken from '@/stores/login/loginCounter'
+import initializaStore from '@/stores/login/loginCounter'
 const ruleForm = reactive({
   phone: '',
   verificationCode: ''
@@ -15,7 +15,7 @@ const rule  = reactive<FormRules<typeof ruleForm>>({
     {pattern: /(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9]).{8,}/, message: '密码应包含数子，字母和特殊符号', trigger: 'blur'}
   ]
 })
-const token = useToken()
+const token = initializaStore()
 function phoneLogin(){
   token.phone = ruleForm.phone
   token.verificationCode = ruleForm.verificationCode

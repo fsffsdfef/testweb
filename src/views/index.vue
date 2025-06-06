@@ -5,14 +5,18 @@ import TopView from "@/views/top/TopView.vue";
 
 <template>
   <el-container class="layout">
-    <el-aside class="aside" width="200px">
+    <el-aside class="aside" width="auto">
       <MenusView></MenusView>
     </el-aside>
     <el-container>
       <el-header class="header">
         <TopView></TopView>
       </el-header>
-      <el-main class="main"><router-view></router-view></el-main>
+      <el-main class="main">
+        <el-scrollbar>
+          <router-view></router-view>
+        </el-scrollbar>
+        </el-main>
     </el-container>
   </el-container>
 </template>

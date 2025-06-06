@@ -2,8 +2,8 @@
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import {ElMessage} from "element-plus";
-import useToken from "@/stores/login/loginCounter";
-const use = useToken()
+import initializaStore from "@/stores/login/loginCounter";
+const use = initializaStore()
 const ruleForm = reactive({
   email: '',
   password: ''
@@ -28,8 +28,6 @@ function loginAccount(){
       ElMessage.error('账号或密码错误！')
     }
   })
-
-
 }
 defineExpose({
   loginAccount

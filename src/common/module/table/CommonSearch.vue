@@ -2,23 +2,23 @@
 import {reactive, ref} from "vue";
 import {CirclePlusFilled, List, Refresh, Search} from "@element-plus/icons-vue";
 import type {ElForm} from "element-plus";
-import type {departProps} from "@/views/main/system/depart/type.ts";
+import type {tableProps} from "@/common/types/main/type.ts";
 
-const props = defineProps<departProps>()
+const props = defineProps<tableProps>()
 const initialForm: any = reactive({})
-for (const item of props.config.search.props) {
-  initialForm[item.prop] = item.initialValue ?? ""
-}
+props.config.search.props.forEach(item => {
+  initialForm[item.prop] = item.initialValue ?? null
+})
 const formRef = ref<InstanceType<typeof ElForm>>()
 const emit = defineEmits(['searchCase', 'resetClick'])
 function searchCase() {
   emit('searchCase', initialForm)
 }
-function handleInputChange() {
-  if (initialForm.departId === '') {
-    initialForm.departId = null;
-  }
-}
+// function handleInputChange() {
+//   if (initialForm.departId === '') {
+//     initialForm.departId = null;
+//   }
+// }
 // 重置操作
 function handleRestClick() {
   formRef.value?.resetFields()
@@ -30,6 +30,7 @@ function handleRestClick() {
 </script>
 
 <template>
+  <div class="search">
   <el-form
       :model="initialForm"
       :inline="true"
@@ -51,11 +52,12 @@ function handleRestClick() {
         </template>
       </template>
       <el-form-item>
-        <el-button :icon=Refresh @click=handleRestClick plain> 重置</el-button>
-        <el-button type="primary" :icon=Search @click=searchCase plain> 查询</el-button>
+        <el-button :icon=Refresh @click=handleRestClick round> 重置</el-button>
+        <el-button type="primary" :icon=Search @click=searchCase round> 查询</el-button>
       </el-form-item>
     </template>
   </el-form>
+  </div>
 </template>
 
 <style scoped>
@@ -64,5 +66,9 @@ function handleRestClick() {
   align-items: center;
   flex-wrap: wrap;
   flex-basis: calc(33.33% - 20px);
+}
+.search {
+  border-bottom: 2px solid #e7edff;
+  margin-bottom: 10px;
 }
 </style>

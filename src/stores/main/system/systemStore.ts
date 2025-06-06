@@ -1,29 +1,30 @@
 import {defineStore} from "pinia";
-import BaseRequest from "@/service";
-import {departPageList, departAdd, departDel} from "@/api/main/system/api.ts";
+import {Add, Del, Update, getPageList} from "@/api/main/system/api.ts";
 
 
 const systemStore = defineStore("system", {
     state: () => ({
-        userTableList: [],
-        departTableList: [],
-        dialogVisible: false
+        TableList: [],
+        pageCount: 0
 }),
     actions: {
-        // 部门
-        async getUserTableList(){
-            const userTable = await BaseRequest({
-                url: "user",
-                method: "GET"
-            })
-            this.userTableList = userTable.data
+        async getTableListAction(pageName: string, data?:any){
+            const TableList = await getPageList(pageName, data)
+            this.TableList = TableList.data.list
+            this.pageCount = TableList.data.count
+            return TableList.data.list
         },
-        async getDepartTableList(pageName: string, data:any){
-            const departTable = await departPageList(pageName, data)
-            this.departTableList = departTable.data.list
+        async addAction(pageName: string, data:any){
+            const result = await Add(pageName, data)
+            this.getTableListAction(pageName)
         },
-        changeDialog(){
-            this.dialogVisible = !this.dialogVisible
+        async delAction(pageName: string, data:any){
+            const result = await Del(pageName, data)
+            this.getTableListAction(pageName)
+        },
+        async updateAction(pageName: string, data:any){
+            const result = await Update(pageName, data)
+            this.getTableListAction(pageName)
         }
     }
 })

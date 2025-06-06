@@ -1,0 +1,15 @@
+export interface httpCaseDataType {
+    caseId: number,
+    expressItem: any[],
+    caseName: string,
+    headers?: object,
+    body?: object,
+    timeOut: number,
+    retries: number,
+    isCore: boolean,
+    port: number,
+    createdDate: string,
+    updatedDate: string,
+    createUser: string,
+    updateUser: string,
+}

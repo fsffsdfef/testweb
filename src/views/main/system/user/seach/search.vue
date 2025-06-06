@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {reactive} from "vue";
-import CommonSearch from "@/common/table/CommonSearch.vue";
+import CommonSearch from "@/common/module/table/CommonSearch.vue";
 import userSearchConfig from "@/views/main/system/user/searchconfig.ts";
 const searchData = reactive({
   userName: "",

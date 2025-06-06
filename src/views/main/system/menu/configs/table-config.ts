@@ -1,10 +1,8 @@
 import {Upload, CirclePlus, List, Download, Search} from "@element-plus/icons-vue";
-import systemStore from "@/stores/main/system/systemStore.ts";
-const system = systemStore()
 
-const departConfig = {
-    pageName: "depart",
-    key: "departId",
+const MenuConfig = {
+    pageName: "menu",
+    key: "menuId",
     table: {
         props: [
             {
@@ -40,13 +38,34 @@ const departConfig = {
             },
             {
                 type: "text",
-                prop: "departId",
-                label: "部门ID"
+                prop: "menuId",
+                label: "ID"
             },
             {
                 type: "text",
-                prop: "departName",
-                label: "部门名"
+                prop: "menuName",
+                label: "名称"
+            },
+            {
+                type: "text",
+                prop: "previousMenu",
+                label: "上级菜单"
+            },
+            {
+                type: "text",
+                prop: "icon",
+                label: "图标"
+            },
+            {
+                type: "path",
+                prop: "path",
+                label: "地址"
+            }
+            ,
+            {
+                type: "number",
+                prop: "sequence",
+                label: "排序"
             }
         ]
     },
@@ -54,27 +73,21 @@ const departConfig = {
         props: [
             {
                 type: "input",
-                label: "部门ID",
-                placeholder: "请输入部门ID",
-                prop: "departId"
-            },
-            {
-                type: "input",
-                label: "部门名",
-                placeholder: "请输入部门名（支持模糊搜索）",
-                prop: "departName"
+                label: "上级菜单",
+                placeholder: "请输入菜单名称",
+                prop: "menuName"
             }
         ]
     },
     tools: {
         header: {
-            title: "部门列表",
+            title: "菜单列表",
             icon: List
         },
         btnList: [
             {
                 type: "primary",
-                btnName: "新增部门",
+                btnName: "新增菜单",
                 icon: CirclePlus,
                 funcType: 'add'
             }
@@ -83,4 +96,4 @@ const departConfig = {
 }
 
 
-export default departConfig
+export default MenuConfig

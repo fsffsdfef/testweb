@@ -1,6 +1,11 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "@/*.vue"],
+  "include": [
+    "env.d.ts", "src/**/*",
+    "src/**/*.vue",
+    "@/*.vue",
+    "node_modules/element-plus/icons-vue/dist"
+  ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",

@@ -4,11 +4,14 @@ import router from "@/router";
 import {localCache} from "@/utils/localcache.ts";
 
 
-const useToken = defineStore('counter', {
+const initializeStore = defineStore('counter', {
     state: () => ({
         token: "",
         userInfo: {},
-        menusMap: []
+        menusMap: [],
+        isCollapse: false,
+        locale: "zh-cn",
+        cascader: []
     }),
     getters: {
 
@@ -21,30 +24,43 @@ const useToken = defineStore('counter', {
                     method: 'POST',
                     data: account
                 })
-            console.log(loginResult)
             const token = loginResult.data.token
+            const email = loginResult.data.email
             localCache.setCache('token', token)
+            localCache.setCache('email', email)
             const Menus = await BaseRequest({
-                url: 'menu',
+                url: 'menu1',
                 method: 'GET'
             })
+            const User = await BaseRequest({
+                url: 'user/getPageList',
+                method: 'post',
+                data: {email: localCache.getCache('email')}
+            })
             localCache.setCache('menuList', Menus.data)
+            localCache.setCache('userInfo', User.data.list[0])
             router.push("/home")
         },
-        // loadLocalCacheAction(){
-        //     const token = localCache.getCache("token")
-        //     const userInfo = localCache.getCache("userInfo")
-        //     const menusMap = localCache.getCache("menusMap")
-        //     if (token){
-        //         this.token = token
-        //         this.userInfo = userInfo
-        //         this.menusMap = menusMap
-        //         const routers = getMenusRouters(menusMap)
-        //         routers.forEach((route)=>router.addRoute("main", route))
-        //
-        //     }
-        // }
+        loadLocalCacheAction(){
+            const token = localCache.getCache("token")
+            const userInfo = localCache.getCache("userInfo")
+            const menusMap = localCache.getCache("menuList")
+            if (token){
+                this.token = token
+                this.userInfo = userInfo
+                this.menusMap = menusMap
+                // const routers = getMenusRouters(menusMap)
+                // routers.forEach((route)=>router.addRoute("main", route))
+
+            }
+        },
+        changeCollapse(){
+            this.isCollapse = !this.isCollapse
+        },
+        changeLocale(){
+                this.locale = this.locale === 'zh-cn'? 'en': 'zh-cn'
+        }
     }
 })
 
-export default useToken
+export default initializeStore

@@ -36,6 +36,9 @@ const request = new Request({
                     config.headers.Authorization = `Bearer ${token}`
                 }
             }
+            if(!token){
+                router.push('/login')
+            }
             return config
 
         },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import CommonTable from "@/common/table/CommonTable.vue";
-import CommonTool from "@/common/table/CommonTool.vue";
+import CommonTable from "@/common/module/table/CommonTable.vue";
+import CommonTool from "@/common/module/table/CommonPaginator.vue";
 import userTableConfig from "@/views/main/system/user/tableconfig.ts"
 import systemStore from "@/stores/main/system/systemStore.ts";
 import {reactive, ref} from "vue";
