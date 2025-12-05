@@ -1,40 +1,71 @@
-<script setup lang="ts">
-import ywzRequest from "@/service";
-import CommonTable from "@/common/module/table/CommonTable.vue";
-async function getMenu() {
-  const data = await ywzRequest({
-    url: 'user/',
-    method: 'GET'
-  })
-  console.log('data:',data)
+<script lang="ts" setup>
+import { ref } from 'vue'
+import { ElMessageBox } from 'element-plus'
+
+import type { DrawerProps } from 'element-plus'
+
+const drawer = ref(false)
+const drawer2 = ref(false)
+const direction = ref<DrawerProps['direction']>('rtl')
+const radio1 = ref('Option 1')
+const handleClose = (done: () => void) => {
+  ElMessageBox.confirm('Are you sure you want to close this?')
+      .then(() => {
+        done()
+      })
+      .catch(() => {
+        // catch error
+      })
+}
+function cancelClick() {
+  drawer2.value = false
+}
+function confirmClick() {
+  ElMessageBox.confirm(`Are you confirm to chose ${radio1.value} ?`)
+      .then(() => {
+        drawer2.value = false
+      })
+      .catch(() => {
+        // catch error
+      })
 }
 </script>
-
 <template>
-<el-button @click="getMenu">点击</el-button>
-  <common-table></common-table>
-  <!--      <div>-->
-  <!--        <el-table-column type="selection" align="center"/>-->
-  <!--      </div>-->
-  <!--      <div>-->
-  <!--        <el-table-column type="expand">-->
-  <!--          <template #default="props">-->
-  <!--            <el-table :data="props.tableData"-->
-  <!--                      style="width: 100%">-->
-  <!--              <template v-for="col in props.column">-->
-  <!--                <el-table-column-->
-  <!--                    :prop="col.prop"-->
-  <!--                    :label="col.label"-->
-  <!--                    align="center"-->
-  <!--                    show-overflow-tooltip-->
-  <!--                />-->
-  <!--              </template>-->
-  <!--            </el-table>-->
-  <!--          </template>-->
-  <!--        </el-table-column>-->
-  <!--      </div>-->
+  <el-button type="primary" style="margin-left: 16px" @click="drawer = true">
+    open
+  </el-button>
+  <el-button type="primary" style="margin-left: 16px" @click="drawer2 = true">
+    with footer
+  </el-button>
+
+  <el-drawer
+      v-model="drawer"
+      title="I am the title"
+      direction="btt"
+      :before-close="handleClose"
+  >
+    <span>Hi, there!</span>
+  </el-drawer>
+  <el-drawer v-model="drawer2" :direction="direction">
+    <template #header>
+      <h4>set title by slot</h4>
+    </template>
+    <template #default>
+      <div>
+        <el-radio v-model="radio1" value="Option 1" size="large">
+          Option 1
+        </el-radio>
+        <el-radio v-model="radio1" value="Option 2" size="large">
+          Option 2
+        </el-radio>
+      </div>
+    </template>
+    <template #footer>
+      <div style="flex: auto">
+        <el-button @click="cancelClick">cancel</el-button>
+        <el-button type="primary" @click="confirmClick">confirm</el-button>
+      </div>
+    </template>
+  </el-drawer>
 </template>
 
-<style scoped>
-
-</style>

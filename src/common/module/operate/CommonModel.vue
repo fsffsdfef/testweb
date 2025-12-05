@@ -3,30 +3,12 @@ import {ref, reactive, computed, onMounted} from 'vue'
 import type {FormInstance, FormRules} from 'element-plus'
 import {ElForm, ElMessage, ElMessageBox} from 'element-plus'
 import type {addProps} from "@/common/types/main/type.ts";
-import {Upload, CirclePlus, List, Download, Search, CirclePlusFilled} from "@element-plus/icons-vue";
-import {Add, Del, Update, getPageList} from "@/api/main/system/api.ts";
-import BaseRequest from "@/service";
 import {localCache} from "@/utils/localcache.ts";
+import CommonExpresses from "@/common/module/operate/CommonExpresses.vue";
+import CommonSuitCase from "@/common/module/operate/CommonSuitCase.vue";
+import {cascaderOptions, loadSelectOptions, processEmptyString} from "@/utils/formUtil.ts";
 
-const optionsMap = reactive({})
-const cascaderOption = localCache.getCache('menuList')
-onMounted(async () => {
-  props.config.formItem.forEach(async item => {
-    if (item.type === 'select') {
-      optionsMap[item.prop] = await getPageList(item.prop)
-    }
-  })
-  // const cascaderMap = await getCascaderOption()
-  // cascaderOption.push(...cascaderMap)
-})
-async function getCascaderOption() {
-  const option = await BaseRequest({
-    'url': 'card',
-    'method': 'GET'
-  })
-  return option.data
-}
-// 获取父组件传入数据
+const optionsMap = reactive([])
 const props = defineProps<addProps>()
 // 获取配置文件中的校验配置
 const rule = reactive<FormRules>(props.config.rules)
@@ -37,6 +19,13 @@ const editMode = ref<'create' | 'edit'>('create')
 const moduleShow = ref(false)
 const initialForm: any = {}
 const formItem = reactive(initialForm)
+// 获取组件展示元素
+const localConfig = computed(() => ({
+  ...props.config,
+  formItem: editMode.value === 'create'
+      ? props.config.formItem.filter(item => !item.isIndex)
+      : [...props.config.formItem.filter((item => !item.pass))]
+}))
 const handleClose = (done: () => void) => {
   ElMessageBox.confirm('确认关闭吗')
       .then(() => {
@@ -46,126 +35,106 @@ const handleClose = (done: () => void) => {
         // catch error
       })
 }
-const emit = defineEmits(['sumbitAction'])
-const localConfig = computed(() => ({
-  ...props.config,
-  formItem: editMode.value === 'create'
-      ? props.config.formItem.filter(item => !item.isIndex)
-      : [...props.config.formItem]
-}))
+const cascaderOptionsMap = cascaderOptions(localCache.getCache("depart").list, props)
 
+const emit = defineEmits(['sumbitAction'])
+function findFullPathByLastValue(
+    lastValue: string | number,
+    options: any[],
+    currentPath: (string | number)[] = [],
+    valueKey: string = 'id'
+): (string | number)[] | null {
+  for (const option of options) {
+    const newPath = [...currentPath, option[valueKey]]
+    // 如果当前选项的值匹配，且没有子节点，说明找到了
+    if (option[valueKey] === String(lastValue) && (!option.children || option.children.length === 0)) {
+      return newPath
+    }
+
+    // 如果有子节点，递归查找
+    if (option.children && option.children.length > 0) {
+      const found = findFullPathByLastValue(lastValue, option.children, newPath, valueKey)
+      if (found) {
+        return found
+      }
+    }
+  }
+}
+
+/**
+ * 处理级联选择器的数据回显
+ * 如果配置了 emitPath: false，需要将单一值转换为完整路径
+ */
+function processCascaderValue(item: any, value: any): any {
+  // 如果是级联选择器类型
+  if (item.type === 'Cascader' && item.cascader) {
+    // 如果配置了 emitPath: false，且值是单一值（不是数组），需要转换为完整路径
+    if (item.cascader.emitPath === false && value !== null && value !== undefined) {
+      // 判断是否是数组（完整路径）
+      if (!Array.isArray(value) || (Array.isArray(value) && value.length > 0 && !Array.isArray(value[0]))) {
+        // 单一值，需要查找完整路径
+        const valueKey = item.cascader.value || 'id'
+        const fullPath = findFullPathByLastValue(value, cascaderOptionsMap, [], valueKey)
+        if (fullPath) {
+          return fullPath
+        }
+      }
+    }
+  }
+  return value
+}
 // 根据传入类型，初始化数据内容
 function changeDialog(edit, data?) {
   editMode.value = edit
   // 清空默认数据
   Object.keys(formItem).forEach(key => delete formItem[key])
+  // 获取select可选内容
+  loadSelectOptions(props.config.formItem, optionsMap)
   // 新增2：初始化表单结构
   props.config.formItem.forEach(item => {
-        formItem[item.prop] = edit === 'create'
-            ? item.initialValue  // 创建模式用初始值
-            : data?.[item.prop] // 编辑模式用传入数据
-      }
-  )
+        // formItem[item.prop] = edit === 'create'
+        //     ? item.initialValue  // 创建模式用初始值
+        //     : data?.[item.prop] // 编辑模式用传入数据
+        const rawValue = edit === 'create'
+        ? item.initialValue  // 创建模式用初始值
+        : data?.[item.prop] // 编辑模式用传入数据
+
+    // 处理级联选择器的数据回显
+    formItem[item.prop] = processCascaderValue(item, rawValue)
+    // console.log("options", formItem[item.prop])
+  })
+  formItem["updateUser"] = localCache.getCache("email") || "未知"
   moduleShow.value = !moduleShow.value
 }
-const cascaderProps = {
-  value: 'menuId',
-  label: 'menuName',
-  checkStrictly: true,
-  emitPath: false
-}
-function handleInputChange() {
-  if (initialForm.departId === '') {
-    initialForm.departId = null;
-  }
-}
-
-function addChild() {
-  formItem.expressItem[0].expressList.push({
-    matchKey: "",
-    matchValue: "",
-    keyType: "",
-    matchValueType: "",
-    matchOper: ""
-  });
-}
-
-const removeDomain = (item) => {
-  const index = formItem.expressItem[0].expressList.indexOf(item)
-  if (index !== -1) {
-    formItem.expressItem[0].expressList.splice(index, 1)
-  }
-}
-const matchMap = [
-  {
-    label: '等于',
-    value: '=='
-  },
-  {
-    label: '大于等于',
-    value: '>='
-  },
-  {
-    label: '小于等于',
-    value: '<='
-  },
-  {
-    label: '不等于',
-    value: '!='
-  },
-  {
-    label: '包含于',
-    value: 'in'
-  },
-  {
-    label: '包含于',
-    value: '不包含于'
-  },
-  {
-    label: '不为空',
-    value: '!=null'
-  }
-
-]
-const typeMap = [
-  {
-    label: "字符串",
-    value: "str"
-  },
-  {
-    label: "整数",
-    value: "int"
-  },
-  {
-    label: "数组",
-    value: "list"
-  }
-]
-
 // 校验传参，并将事件暴露给父组件
 function sumbitAction() {
   ruleFormRef.value?.validate((valid) => {
     if (valid) {
       moduleShow.value = !moduleShow.value
-      console.log('formItem', formItem)
-      emit("sumbitAction", editMode.value, formItem)
+      // 处理级联组件的数据转换
+      const submitData = { ...formItem }
+      props.config.formItem.forEach(item => {
+        if ((item.type === 'Cascader'|| item.type === 'suitCase') && item.submitProp && item.mapKey) {
+          // 将显示字段的数据复制到提交字段
+          submitData[item.submitProp] = formItem[item.prop]
+          // 删除显示字段（可选，根据后端需求）
+          delete submitData[item.prop]
+        }
+      })
+      const value = processEmptyString(submitData)
+      emit("sumbitAction", editMode, value)
     } else {
       ElMessage.error('数据错误')
     }
   })
 }
-
-function test() {
-  ruleFormRef.value?.validate((valid) => {
-    if (valid) {
-      moduleShow.value = !moduleShow.value
-    } else {
-      ElMessage.error('数据错误')
-    }
-  })
+export interface CommonModelExpose {
+  changeDialog: (edit: string, data?: any) => void;
 }
-
-defineExpose({changeDialog})
+const expose: CommonModelExpose = {
+  changeDialog
+};
+defineExpose(expose)
 </script>
 
 <template>
@@ -180,6 +149,7 @@ defineExpose({changeDialog})
         :model="formItem"
         :rules="rule"
         label-position="right"
+        @submit.prevent="sumbitAction"
     >
       <template v-for="item in localConfig.formItem">
         <template v-if="item.type==='input'">
@@ -187,7 +157,7 @@ defineExpose({changeDialog})
             <el-input
                 v-model="formItem[item.prop]"
                 v-bind="item"
-                @change="handleInputChange"></el-input>
+              ></el-input>
           </el-form-item>
         </template>
         <template v-else-if="item.type==='select'">
@@ -196,6 +166,7 @@ defineExpose({changeDialog})
                 v-model="formItem[item.prop]"
                 :placeholder="item.placeholder"
                 filterable
+                :multiple="item.multiple"
                 style="width: 200px"
             >
               <el-option
@@ -235,67 +206,32 @@ defineExpose({changeDialog})
         </template>
         <template v-else-if="item.type==='express'">
           <el-form-item v-bind="item">
-            <el-form
-                v-for="(express, index) in formItem[item.prop][0].expressList"
-                :key="index"
-                label-position="left"
-            >
-              <el-form-item :label="'规则' + (index+1)" class="item">
-                <el-input
-                    v-model="express['matchKey']"
-                    placeholder="需要校验的字段"
-                    style="width: 15%;"
-                />
-                <el-input
-                    v-model="express['keyType']"
-                    placeholder="校验的字段类型"
-                    style="width: 15%; padding-left: 5px"
-                />
-                <el-input
-                    v-model="express['matchOper']"
-                    placeholder="校验条件"
-                    style="width: 15%; padding-left: 5px"
-                />
-                <el-input
-                    v-model="express['matchValueType']"
-                    style="width: 15%; padding-left: 5px"
-                />
-                <el-input
-                    v-model="express['matchValue']"
-                    placeholder="预期"
-                    style="width: 15%; padding-left: 5px"
-                />
-                <div style="align-items: center; width: 15%">
-                  <el-button type="primary" @click="addChild" :icon="CirclePlusFilled" circle></el-button>
-                  <el-button
-                      type="danger"
-                      v-show="formItem[item.prop][0].expressList.length>1"
-                      @click.prevent="removeDomain(express)"
-                      icon="RemoveFilled" circle/>
-                </div>
-              </el-form-item>
-            </el-form>
+            <CommonExpresses :express-item="formItem[item.prop]"></CommonExpresses>
           </el-form-item>
         </template>
-        <template v-else-if="item.type==='cascader'">
+        <template v-else-if="item.type==='suitCase'">
           <el-form-item v-bind="item">
+            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="cascaderOptionsMap"></CommonSuitCase>
+          </el-form-item>
+        </template>
+        <template v-if="item.type==='Cascader'">
+          <el-form-item :label="item.label">
             <el-cascader
-                :v-model="formItem[item.prop]"
-                :props="cascaderProps"
-                :placholder="item.placeholder"
-                :options="cascaderOption"
-                separator=">"
-                filterable
+                v-model="formItem[item.prop]"
+                :options="cascaderOptionsMap"
+                :props="item.cascader"
+                :placeholder="item.placeholder"
                 clearable
-            >
-            </el-cascader>
+                filterable
+                :show-all-levels=false
+            />
           </el-form-item>
         </template>
       </template>
       <div class="dialog-footer">
         <el-form-item>
           <el-button @click="moduleShow = false">取消</el-button>
-          <el-button type="primary" @click="sumbitAction">
+          <el-button type="primary" native-type="submit">
             确认
           </el-button>
         </el-form-item>

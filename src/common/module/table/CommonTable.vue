@@ -1,31 +1,41 @@
 <script setup lang="ts">
-import {Delete, Edit, DocumentRemove, List} from '@element-plus/icons-vue'
+import {Delete, Edit, DocumentRemove, DocumentCopy, List, Promotion} from '@element-plus/icons-vue'
 import systemStore from "@/stores/main/system/systemStore.ts";
-import {reactive, ref} from "vue";
+import {reactive, ref, computed} from "vue";
 import {storeToRefs} from "pinia";
 import type {tableProps} from "@/common/types/main/type.ts";
 import {dayJS} from "@/utils/dataformat.ts";
 import {copy} from "@/utils/copy.ts";
 import router from "@/router";
+
 const queryInfo = {}
 const props = defineProps<tableProps>()
 const system = systemStore()
 getTable()
 const {TableList} = storeToRefs(system)
+const multipleSelection = ref([])
 // 暴露新增与编辑方法给父组件监控
-const emit = defineEmits(['editAction', 'addAction'])
-function addAction(edit) {
+const emit = defineEmits(['editAction', 'addAction', 'operation'])
+function addAction(edit="create") {
   emit('addAction', edit)
 }
 function editAction(edit, data) {
   emit('editAction', edit, data)
+}
+function operation(data, show=true) {
+  emit('operation', data, show)
 }
 // 列表数据增删改查
 function addTable(data) {
   system.addAction(props.config.pageName, data)
 }
 function delTable(data) {
-  queryInfo[props.config.key] = data
+  if (Array.isArray(data)){
+    queryInfo["ids"] = data
+  }
+  else{
+    queryInfo[props.config.key] = data
+  }
   system.delAction(props.config.pageName, queryInfo)
 }
 function updateTable(data) {
@@ -34,8 +44,33 @@ function updateTable(data) {
 function getTable(queryInfo?) {
   system.getTableListAction(props.config.pageName, queryInfo)
 }
+function handleSelectionChange(val){
+  const data = val.map(item => item[props.config.key])
+  multipleSelection.value = data
+}
+
+// 使用计算属性
+const actionHandlers = computed(() => ({
+  submitTask: operation,
+  add: addAction,
+  edit: editAction,
+}))
+
+async function handleClick(actionType, data?:any) {
+   await actionHandlers.value[actionType]?.(data)
+}
+export interface CommonTableExpose {
+  getTable: (data?: any) => void;
+  updateTable: (data: any) => void;
+  addTable: (data: any) => void;
+}
+const expose: CommonTableExpose = {
+  getTable,
+  updateTable,
+  addTable
+};
 // 外露getTable, updateTable, addTable方法给父组件调用
-defineExpose({getTable, updateTable, addTable})
+defineExpose(expose)
 
 </script>
 
@@ -50,48 +85,13 @@ defineExpose({getTable, updateTable, addTable})
         {{ config.tools.header.title }}
       </el-text>
     </div>
+
     <div class="tool">
+      <div v-show="multipleSelection.length>0" style="padding-right: 15px;">
+        <el-button type="danger" :icon="Delete" @click="delTable(multipleSelection)">批量删除</el-button>
+      </div>
       <div v-for="btn in config.tools.btnList" style="padding-right: 15px;">
-        <template v-if="btn.funcType==='add'">
-          <el-button
-              v-bind="btn"
-              style="margin-right: 5px"
-              @click="addAction('create')"
-              round
-          >
-            {{ btn.btnName }}
-          </el-button>
-        </template>
-        <template v-else-if="btn.funcType==='upload'">
-          <el-button
-              v-bind="btn"
-              style="margin-right: 5px"
-              @click="addAction('create')"
-              round
-          >
-            {{ btn.btnName }}
-          </el-button>
-        </template>
-        <template v-else-if="btn.funcType==='download'">
-          <el-button
-              v-bind="btn"
-              style="margin-right: 5px"
-              @click="addAction('create')"
-              round
-          >
-            {{ btn.btnName }}
-          </el-button>
-        </template>
-        <template v-else-if="btn.funcType==='set'">
-          <el-button
-              v-bind="btn"
-              style="margin-right: 5px"
-              @click="addAction('create')"
-              round
-          >
-            {{ btn.btnName }}
-          </el-button>
-        </template>
+        <el-button type="primary" :icon="btn.icon" @click="handleClick(btn.type)">新增{{btn.name}}</el-button>
       </div>
     </div>
   </div>
@@ -101,6 +101,8 @@ defineExpose({getTable, updateTable, addTable})
         :data="TableList"
         border
         stripe
+        header-cell-class-name="headerCellClassName"
+        @selection-change="handleSelectionChange"
         style="width: 100%">
       <template v-for="col in config.table.props" :key="config.key">
         <template v-if="col.type === 'selection'">
@@ -112,7 +114,7 @@ defineExpose({getTable, updateTable, addTable})
               <div v-if="col.key==='expressItem'">
                 <div v-for="(item, index) in scope.row['expressItem'][0]['expressList']" :key="index">
                   <label>规则(ID{{ item.expressId }})</label>
-                  <span style="padding-left: 10px">{{ item.keyType }}: {{ item.matchKey }}</span>
+                  <span style="padding-left: 10px">{{ item.keyType }}[{{ item.matchKey }}]</span>
                   <span style="padding-left: 10px">{{ item.matchOper }}</span>
                   <span style="padding-left: 10px">{{ item.matchValue }}</span>
                 </div>
@@ -124,8 +126,31 @@ defineExpose({getTable, updateTable, addTable})
                       stripe
                   >
                     <template v-for="children in col.props">
-                      <el-table-column v-bind="children" align="center"/>
+                      <template v-if="children.type === 'tag'">
+                        <el-table-column
+                            v-bind="children"
+                            align="center"
+                            show-overflow-tooltip>
+                          <template #default="scope">
+                            <el-tag
+                                size="small"
+                                :type="scope.row[col.prop]?'danger':'info'"
+                            >
+                              {{ scope.row[col.prop] ? "是" : "否" }}
+                            </el-tag>
+                          </template>
+                        </el-table-column>
+                      </template>
+                      <template v-else>
+                        <el-table-column v-bind="children" align="center"/>
+                      </template>
                     </template>
+                    <el-table-column label="操作" align="center">
+                      <template #default="data">
+                        <el-button type="primary" :icon="Edit" @click="editAction('edit', data.row)" text>编辑</el-button>
+                        <el-button type="danger" :icon="Delete" @click="delTable(data.row[config.key])" text>删除</el-button>
+                      </template>
+                    </el-table-column>
                   </el-table>
                 </div>
               </div>
@@ -166,9 +191,19 @@ defineExpose({getTable, updateTable, addTable})
                 </el-icon>
                 <el-text class="mx-1">{{ JSON.stringify(scope.row[col.prop]) }}</el-text>
               </template>
-              <template v-else>
-                空
-              </template>
+            </template>
+          </el-table-column>
+        </template>
+        <template v-else-if="col.type == 'copy'">
+          <el-table-column
+            v-bind="col"
+            align="center"
+          >
+            <template #default="scope">
+              <el-icon size="13" @click="copy(JSON.stringify(scope.row[col.prop]))">
+                <DocumentRemove/>
+              </el-icon>
+              <el-text type="primary" class="mx-1">{{ scope.row[col.prop] }}</el-text>
             </template>
           </el-table-column>
         </template>
@@ -191,6 +226,11 @@ defineExpose({getTable, updateTable, addTable})
         <template #default="scope">
           <el-button type="primary" :icon="Edit" @click="editAction('edit', scope.row)" text>编辑</el-button>
           <el-button type="danger" :icon="Delete" @click="delTable(scope.row[config.key])" text>删除</el-button>
+          <template v-for="btn in config.table.btn">
+            <el-button type="primary" :icon="Promotion" @click="handleClick(btn.action, scope.row)" text>
+              {{ btn.name }}
+            </el-button>
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -211,4 +251,7 @@ defineExpose({getTable, updateTable, addTable})
   margin-bottom: 10px;
 }
 
+，headerCellClassName {
+  background-color: #2c3e50;
+}
 </style>

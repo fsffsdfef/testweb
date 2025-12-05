@@ -8,6 +8,9 @@ const departConfig = {
     table: {
         props: [
             {
+                type: "selection"
+            },
+            {
                 type: "expand",
                 key: "apply",
                 props: [
@@ -73,10 +76,9 @@ const departConfig = {
         },
         btnList: [
             {
-                type: "primary",
-                btnName: "新增部门",
-                icon: CirclePlus,
-                funcType: 'add'
+                type: "add",
+                name: "部门",
+                icon: "CirclePlus"
             }
         ]
     }

@@ -4,7 +4,16 @@ const portConfig = {
     pageName: "port",
     key: "portId",
     search: {
+        cascade: {
+            apply: true
+        },
         props: [
+            {
+                type: "Cascader",
+                label: "应用",
+                placeholder: "请选择部门/应用",
+                prop: "apply"
+            },
             {
                 type: "input",
                 label: "接口ID",
@@ -13,7 +22,7 @@ const portConfig = {
             },
             {
                 type: "input",
-                label: "接口名名",
+                label: "接口名",
                 placeholder: "接口名",
                 prop: "portName"
             }
@@ -26,10 +35,9 @@ const portConfig = {
         },
         btnList: [
             {
-                type: "primary",
-                btnName: "新增接口",
-                icon: CirclePlus,
-                funcType: 'add'
+                type: "add",
+                name: "接口",
+                icon: "CirclePlus"
             }
         ]
     },

@@ -5,6 +5,7 @@ const system = systemStore()
 const addConfig = {
     pageName: "apply",
     title: "应用",
+    key: "applyId",
     formItem: [
         {
             type: "input",
@@ -51,6 +52,7 @@ const addConfig = {
             label: "所属部门",
             placeholder: "请选择部门",
             prop: "depart",
+            pageName: "depart",
             key: "departId",
             value: "departName",
             initialValue: "",

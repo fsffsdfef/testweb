@@ -21,7 +21,6 @@ export function Del(pageName: string, queryInfo: any){
         data: queryInfo
     })
 }
-
 export function Update(pageName:string, queryInfo: any){
     return BaseRequest({
         url: `${pageName}/update`,

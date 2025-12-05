@@ -4,7 +4,17 @@ const httpCaseConfig = {
     pageName: "httpcase",
     key: "caseId",
     search: {
+        cascade: {
+            apply: true,
+            port: true
+        },
         props: [
+            {
+                type: "Cascader",
+                label: "接口",
+                placeholder: "请选择部门/应用/接口",
+                prop: "portId"
+            },
             {
                 type: "input",
                 label: "用例ID",
@@ -26,28 +36,9 @@ const httpCaseConfig = {
         },
         btnList: [
             {
-                type: "primary",
-                btnName: "新增应用",
-                icon: CirclePlus,
-                funcType: 'add'
-            },
-            {
-                type: "primary",
-                btnName: "上传",
-                icon: Upload,
-                funcType: "upload"
-            },
-            {
-                type: "primary",
-                btnName: "下载",
-                icon: Download,
-                funcType: "download"
-            },
-            {
-                type: "primary",
-                btnName: "列设置",
-                icon: Download,
-                funcType: "set"
+                type: "add",
+                name: "用例",
+                icon: "CirclePlus"
             }
         ]
     },
@@ -89,7 +80,7 @@ const httpCaseConfig = {
             },
             {
                 type: "text",
-                prop: "timeOut",
+                prop: "timeout",
                 label: "超时时间"
             },
             {
@@ -106,6 +97,12 @@ const httpCaseConfig = {
                 type: "time",
                 prop: "updatedDate",
                 label: "更新时间"
+            }
+        ],
+        btn: [
+            {
+                action: "submitTask",
+                name: "运行"
             }
         ]
     },

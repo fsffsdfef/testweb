@@ -1,120 +1,269 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, toRaw } from 'vue'
-import { ElMessageBox } from 'element-plus'
-import type { FormItemConfig } from '@/common/types/main/type.ts'
+import {ref, reactive, computed, onMounted} from 'vue'
+import type {FormInstance, FormRules} from 'element-plus'
+import {ElForm, ElMessage, ElMessageBox} from 'element-plus'
+import type {addProps} from "@/common/types/main/type.ts";
+import {localCache} from "@/utils/localcache.ts";
+import CommonExpresses from "@/common/module/operate/CommonExpresses.vue";
+import CommonSuitCase from "@/common/module/operate/CommonSuitCase.vue";
+import {cascaderOptions, loadSelectOptions, processEmptyString} from "@/utils/formUtil.ts";
 
-interface Props {
-  config: {
-    formItem: (FormItemConfig & { isIndex?: boolean })[]
-  }
-}
-
-interface Emits {
-  (e: 'submit-action', edit: boolean, data: Record<string, any>): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
-
-// 对话框状态
+const optionsMap = reactive([])
+const props = defineProps<addProps>()
+// 获取配置文件中的校验配置
+const rule = reactive<FormRules>(props.config.rules)
+const ruleFormRef = ref<FormInstance>()
+// 初始化组件类型
+const editMode = ref<'create' | 'edit'>('create')
+// 初始化组件状态
 const moduleShow = ref(false)
-const isEditMode = ref(false)
+const initialForm: any = {}
+const formItem = reactive(initialForm)
+// 获取组件展示元素
+const localConfig = computed(() => ({
+  ...props.config,
+  formItem: editMode.value === 'create'
+      ? props.config.formItem.filter(item => !item.isIndex)
+      : [...props.config.formItem.filter((item => !item.pass))]
+}))
+const handleClose = (done: () => void) => {
+  ElMessageBox.confirm('确认关闭吗')
+      .then(() => {
+        done()
+      })
+      .catch(() => {
+        // catch error
+      })
+}
+const cascaderOptionsMap = cascaderOptions(localCache.getCache("depart").list, props)
 
-// 响应式表单数据（使用明确类型）
-const formModel = reactive<Record<string, any>>({})
+const emit = defineEmits(['sumbitAction'])
 
-// 过滤后的表单项（避免直接修改props）
-const filteredFormItems = computed(() =>
-    props.config.formItem.filter(item =>
-        isEditMode.value ? true : !item.isIndex
-    )
-)
+/**
+ * 根据最后一个值查找完整路径
+ * @param lastValue 最后一个节点的值
+ * @param options 级联选项数据
+ * @param currentPath 当前路径（递归使用）
+ * @param valueKey 值字段名，默认为 'id'
+ * @returns 完整路径数组，如果找不到返回 null
+ */
+function findFullPathByLastValue(
+    lastValue: string | number,
+    options: any[],
+    currentPath: (string | number)[] = [],
+    valueKey: string = 'id'
+): (string | number)[] | null {
+  for (const option of options) {
+    const newPath = [...currentPath, option[valueKey]]
 
-// 表单重置逻辑
-const resetForm = () => {
-  filteredFormItems.value.forEach(item => {
-    formModel[item.prop] = item.initialValue ?? null
+    // 如果当前选项的值匹配，且没有子节点，说明找到了
+    if (option[valueKey] === lastValue && (!option.children || option.children.length === 0)) {
+      return newPath
+    }
+
+    // 如果有子节点，递归查找
+    if (option.children && option.children.length > 0) {
+      const found = findFullPathByLastValue(lastValue, option.children, newPath, valueKey)
+      if (found) {
+        return found
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * 处理级联选择器的数据回显
+ * 如果配置了 emitPath: false，需要将单一值转换为完整路径
+ */
+function processCascaderValue(item: any, value: any): any {
+  // 如果是级联选择器类型
+  if (item.type === 'Cascader' && item.cascader) {
+    // 如果配置了 emitPath: false，且值是单一值（不是数组），需要转换为完整路径
+    if (item.cascader.emitPath === false && value !== null && value !== undefined) {
+      // 判断是否是数组（完整路径）
+      if (!Array.isArray(value) || (Array.isArray(value) && value.length > 0 && !Array.isArray(value[0]))) {
+        // 单一值，需要查找完整路径
+        const valueKey = item.cascader.value || 'id'
+        const fullPath = findFullPathByLastValue(value, cascaderOptionsMap, [], valueKey)
+        if (fullPath) {
+          return fullPath
+        }
+      }
+    }
+  }
+  return value
+}
+
+// 根据传入类型，初始化数据内容
+function changeDialog(edit, data?) {
+  editMode.value = edit
+  // 清空默认数据
+  Object.keys(formItem).forEach(key => delete formItem[key])
+  // 获取select可选内容
+  loadSelectOptions(props.config.formItem, optionsMap)
+  // 新增2：初始化表单结构
+  props.config.formItem.forEach(item => {
+    const rawValue = edit === 'create'
+        ? item.initialValue  // 创建模式用初始值
+        : data?.[item.prop] // 编辑模式用传入数据
+
+    // 处理级联选择器的数据回显
+    formItem[item.prop] = processCascaderValue(item, rawValue)
+  })
+  formItem["updateUser"] = localCache.getCache("email") || "未知"
+  moduleShow.value = !moduleShow.value
+}
+
+// 校验传参，并将事件暴露给父组件
+function sumbitAction() {
+  ruleFormRef.value?.validate((valid) => {
+    if (valid) {
+      moduleShow.value = !moduleShow.value
+      // 处理级联组件的数据转换
+      const submitData = { ...formItem }
+      props.config.formItem.forEach(item => {
+        if ((item.type === 'Cascader'|| item.type === 'suitCase') && item.submitProp && item.mapKey) {
+          // 如果配置了 emitPath: false，需要提取最后一个值
+          if (item.type === 'Cascader' && item.cascader?.emitPath === false) {
+            // 如果 formItem[item.prop] 是完整路径数组，提取最后一个值
+            if (Array.isArray(formItem[item.prop]) && formItem[item.prop].length > 0) {
+              submitData[item.submitProp] = formItem[item.prop][formItem[item.prop].length - 1]
+            } else {
+              submitData[item.submitProp] = formItem[item.prop]
+            }
+          } else {
+            // 将显示字段的数据复制到提交字段
+            submitData[item.submitProp] = formItem[item.prop]
+          }
+          // 删除显示字段（可选，根据后端需求）
+          delete submitData[item.prop]
+        }
+      })
+      const value = processEmptyString(submitData)
+      emit("sumbitAction", editMode, value)
+    } else {
+      ElMessage.error('数据错误')
+    }
   })
 }
 
-// 对话框关闭确认
-const handleClose = (done: () => void) => {
-  ElMessageBox.confirm('确认关闭吗？未保存的内容将会丢失')
-      .then(done)
-      .catch(() => { /* 取消操作 */ })
+export interface CommonModelExpose {
+  changeDialog: (edit: string, data?: any) => void;
 }
-
-// 提交处理
-const handleSubmit = () => {
-  const submitData = toRaw(formModel)
-  emit('submit-action', isEditMode.value, submitData)
-  moduleShow.value = false
-  resetForm()
-}
-
-// 暴露给父组件的方法
-const openDialog = (edit: boolean, rowData?: Record<string, any>) => {
-  isEditMode.value = edit
-  resetForm()
-
-  if (edit && rowData) {
-    filteredFormItems.value.forEach(item => {
-      formModel[item.prop] = rowData[item.prop] ?? item.initialValue
-    })
-  }
-
-  moduleShow.value = true
-}
-
-defineExpose({ openDialog })
-
-// 自动处理空值
-watch(formModel, (newVal) => {
-  if (newVal.departId === '') {
-    formModel.departId = null
-  }
-}, { deep: true })
+const expose: CommonModelExpose = {
+  changeDialog
+};
+defineExpose(expose)
 </script>
 
 <template>
+  <!-- template 部分保持不变 -->
   <el-dialog
       v-model="moduleShow"
-      :title="isEditMode ? '编辑部门' : '新增部门'"
-      width="500"
+      :title="editMode === 'create'? `新增${config.title}`: `编辑${config.title}`"
+      :width="'50%'"
       :before-close="handleClose"
   >
-    <el-form :model="formModel" label-width="100px">
-      <template v-for="item in filteredFormItems" :key="item.prop">
-        <el-form-item
-            :label="item.label"
-            :prop="item.prop"
-            :rules="item.rules"
-        >
-          <el-input
-              v-model="formModel[item.prop]"
-              :placeholder="item.placeholder"
-              clearable
-          />
-        </el-form-item>
+    <el-form
+        ref="ruleFormRef"
+        :model="formItem"
+        :rules="rule"
+        label-position="right"
+        @submit.prevent="sumbitAction"
+    >
+      <template v-for="item in localConfig.formItem">
+        <template v-if="item.type==='input'">
+          <el-form-item v-bind="item">
+            <el-input
+                v-model="formItem[item.prop]"
+                v-bind="item"
+            ></el-input>
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='select'">
+          <el-form-item v-bind="item">
+            <el-select
+                v-model="formItem[item.prop]"
+                :placeholder="item.placeholder"
+                filterable
+                :multiple="item.multiple"
+                style="width: 200px"
+            >
+              <el-option
+                  v-for="op in optionsMap[item.prop]?.data.list"
+                  :key="op[item.key]"
+                  :label="op[item.value]"
+                  :value="op[item.key]"
+              />
+            </el-select>
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='number'">
+          <el-form-item v-bind="item">
+            <el-input-number
+                v-model="formItem[item.prop]"
+                :controls="false"
+                controls-position="right"/>
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='single'">
+          <el-form-item v-bind="item">
+            <el-radio-group v-model="formItem[item.prop]">
+              <el-radio :value=true>是</el-radio>
+              <el-radio :value=false>否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='obj'">
+          <el-form-item v-bind="item">
+            <el-input
+                v-model="formItem[item.prop]"
+                :rows="5"
+                type="textarea"
+                placeholder="Please input"
+            />
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='express'">
+          <el-form-item v-bind="item">
+            <CommonExpresses :express-item="formItem[item.prop]"></CommonExpresses>
+          </el-form-item>
+        </template>
+        <template v-else-if="item.type==='suitCase'">
+          <el-form-item v-bind="item">
+            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="cascaderOptionsMap"></CommonSuitCase>
+          </el-form-item>
+        </template>
+        <template v-if="item.type==='Cascader'">
+          <el-form-item :label="item.label">
+            <el-cascader
+                v-model="formItem[item.prop]"
+                :options="cascaderOptionsMap"
+                :props="item.cascader"
+                :placeholder="item.placeholder"
+                clearable
+                filterable
+                :show-all-levels=false
+            />
+          </el-form-item>
+        </template>
       </template>
-
-      <template #footer>
-        <div class="dialog-footer">
+      <div class="dialog-footer">
+        <el-form-item>
           <el-button @click="moduleShow = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">
-            {{ isEditMode ? '更新' : '创建' }}
+          <el-button type="primary" native-type="submit">
+            确认
           </el-button>
-        </div>
-      </template>
+        </el-form-item>
+      </div>
     </el-form>
   </el-dialog>
 </template>
 
 <style scoped>
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+.item {
+  flex-direction: row;
+  justify-content: space-between;
 }
 </style>

@@ -9,7 +9,7 @@ const addConfig = {
             label: "部门ID",
             placeholder: "请输入ID",
             prop: "departId",
-            initialValue: "",
+            initialValue: null,
             disabled: true,
             isIndex: true
         },

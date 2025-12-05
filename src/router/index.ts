@@ -39,7 +39,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/system",
-    name: "System",
+    name: "system",
     meta: {title: "配置管理"},
     component: ()=>import("@/views/index.vue"),
     children: [
@@ -90,16 +90,22 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: "/case",
-    name: "case",
-    meta: {title: "用例管理"},
+    path: "/task",
+    name: "task",
+    meta: {title: "自动化管理"},
     component: ()=>import("@/views/index.vue"),
     children: [
       {
-        path: "http",
-        name: "http",
-        meta: {title: "http接口用例"},
-        component: ()=>import("@/views/main/cases/Interface/httpcase/index.vue"),
+        path: "suit",
+        name: "suit",
+        meta: {title: "套件管理"},
+        component: ()=>import("@/views/main/task/suit/index.vue")
+      },
+      {
+        path: "port1",
+        name: "port1",
+        meta: {title: "接口自动化"},
+        component: ()=>import("@/views/test.vue"),
       }
     ]
   }
@@ -109,6 +115,15 @@ const router = createRouter({
   history: createWebHistory(),
   routes
 })
+// 动态路由（需要根据菜单数据生成）
+// const dynamicRoutes: Array<RouteRecordRaw> = []
+//
+// // 创建路由实例
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes: constantRoutes
+// })
+
 
 router.beforeEach((to) => {
   const token = localCache.getCache('token')

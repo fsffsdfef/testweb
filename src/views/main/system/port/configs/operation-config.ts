@@ -1,5 +1,5 @@
 import systemStore from "@/stores/main/system/systemStore.ts";
-
+import {localCache} from "@/utils/localcache.ts";
 const system = systemStore()
 
 const addConfig = {
@@ -38,19 +38,20 @@ const addConfig = {
             initialValue: "",
             isIndex: false
         },
-        {
-            type: "input",
-            label: "修改人",
-            placeholder: "请选择修改人",
-            prop: "updateUser",
-            initialValue: "",
-            isIndex: false
-        },
+        // {
+        //     type: "input",
+        //     label: "修改人",
+        //     placeholder: "请选择修改人",
+        //     prop: "updateUser",
+        //     initialValue: localCache.getCache("email") || "未知",
+        //     isIndex: false
+        // },
         {
             type: "select",
             label: "所属应用",
             placeholder: "请选择应用",
             prop: "apply",
+            pageName: "apply",
             initialValue: "",
             key: "applyId",
             value: "applyName",

@@ -51,7 +51,8 @@ const addConfig = {
                             keyType: "",
                             matchValue: "",
                             matchOper: "",
-                            matchValueType: ""
+                            matchValueType: "",
+                            matchMethod: ""
                         }
                     ]
                 }
@@ -61,7 +62,7 @@ const addConfig = {
         {
             type: "number",
             label: "超时时间",
-            prop: "timeOut",
+            prop: "timeout",
             initialValue: 3,
             isIndex: false
         },
@@ -74,22 +75,39 @@ const addConfig = {
         },
         {
             type: "single",
-            label: "是否为核心用例",
+            label: "核心用例",
             prop: "isCore",
             initialValue: false,
             isIndex: false
         },
         {
-            type: "select",
-            label: "所属接口",
+            type: "Cascader",
+            label: "接口",
+            cascader: {
+                value: 'id',
+                label: 'name',
+                children: 'children',
+                showPrefix: false,
+                checkOnClickNode: true,
+                multiple: false, // 多选
+                emitPath: false, // 是否返回完整路径
+                checkStrictly: false // 是否严格的遵守父子不互相关联
+            },
             placeholder: "请选择接口",
             prop: "port",
-            key: "portId",
-            value: "portName",
-            initialValue: null,
-            isIndex: false
+            initialValue: [],
+            isIndex: false,
+            mapKey: false
         }
     ],
+    search: {
+        cascade: {
+            depart: true,
+            apply: true,
+            port: true,
+            httpcase: false
+        }
+    },
     rules: {
         applyName: [
             {required: true, message: '应用名必填', trigger: 'blur'}

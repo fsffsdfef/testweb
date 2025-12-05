@@ -22,7 +22,8 @@ const initializeStore = defineStore('counter', {
                 {
                     url: 'login',
                     method: 'POST',
-                    data: account
+                    data: account,
+                    skipMessage: true
                 })
             const token = loginResult.data.token
             const email = loginResult.data.email
@@ -37,7 +38,12 @@ const initializeStore = defineStore('counter', {
                 method: 'post',
                 data: {email: localCache.getCache('email')}
             })
+            const Depart = await BaseRequest({
+                url: 'depart/getPageList',
+                method: 'post',
+            })
             localCache.setCache('menuList', Menus.data)
+            localCache.setCache('depart', Depart.data)
             localCache.setCache('userInfo', User.data.list[0])
             router.push("/home")
         },

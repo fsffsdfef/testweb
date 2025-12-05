@@ -6,37 +6,6 @@ const MenuConfig = {
     table: {
         props: [
             {
-                type: "expand",
-                key: "apply",
-                props: [
-                    {
-                        type: "text",
-                        prop: "applyId",
-                        label: "应用ID"
-                    },
-                    {
-                        type: "text",
-                        prop: "applyName",
-                        label: "应用名"
-                    },
-                    {
-                        type: "text",
-                        prop: "baseUrl",
-                        label: "url"
-                    },
-                    {
-                        type: "text",
-                        prop: "synopsis",
-                        label: "简介"
-                    },
-                    {
-                        type: "text",
-                        prop: "owner",
-                        label: "负责人"
-                    }
-                ]
-            },
-            {
                 type: "text",
                 prop: "menuId",
                 label: "ID"
@@ -86,10 +55,9 @@ const MenuConfig = {
         },
         btnList: [
             {
-                type: "primary",
-                btnName: "新增菜单",
-                icon: CirclePlus,
-                funcType: 'add'
+                type: "add",
+                name: "菜单",
+                icon: "CirclePlus"
             }
         ]
     }
