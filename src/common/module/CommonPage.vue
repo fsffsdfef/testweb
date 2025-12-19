@@ -41,9 +41,7 @@ function updateEditModel(edit: string, data?: any) {
 }
 
 function updateReqModel(data, show) {
-  console.log("data", data)
-  reqDataRef.value?.changeShow(data, show)
-  reqDataRef.value?.getReqData(data)
+  reqDataRef.value?.getReqData(data, show)
 }
 function modelSubmit(edit: string, data: any) {
   if (edit.value === 'edit') {

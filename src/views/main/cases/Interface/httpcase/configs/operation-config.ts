@@ -91,7 +91,8 @@ const addConfig = {
                 checkOnClickNode: true,
                 multiple: false, // 多选
                 emitPath: false, // 是否返回完整路径
-                checkStrictly: false // 是否严格的遵守父子不互相关联
+                checkStrictly: false, // 是否严格的遵守父子不互相关联
+                custom: false
             },
             placeholder: "请选择接口",
             prop: "port",

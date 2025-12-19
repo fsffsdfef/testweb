@@ -27,7 +27,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/test',
     name: 'test',
     meta: {title: "测试"},
-    component: () => import('@/views/test.vue'),
+    component: () => import('@/views/jsonTreeDemo.vue'),
   },
   {
     path: '/about',

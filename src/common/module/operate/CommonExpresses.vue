@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import {reactive, ref} from "vue";
+import {reactive, ref, computed } from "vue";
 import {CirclePlusFilled, RemoveFilled, Top} from "@element-plus/icons-vue";
 import {ElForm, ElMessage, ElMessageBox} from 'element-plus'
+import systemStore from "@/stores/main/system/systemStore.ts";
+import {storeToRefs} from "pinia";
 
-
+const system = systemStore()
+getOperators()
+const {operatorMap} = storeToRefs(system)
+console.log("operatorMap", operatorMap.value)
+const matchMap = computed(()=>{
+  return Object.entries(operatorMap.value).map(([op, name]) => ({
+    label: name,
+    value: op
+  }))
+})
 interface ExpressRule {
   matchKey: string;
   keyType: string;
@@ -35,22 +46,24 @@ const matchMethodMap = reactive([
   {label: '长度', value: 'len'},
   {label: '总和', value: 'sum'}
 ])
-const matchMap = reactive([
-  {label: '等于', value: '=='},
-  {label: '大于等于', value: '>='},
-  {label: '小于等于', value: '<='},
-  {label: '不等于', value: '!='},
-  {label: '包含于', value: 'in'},
-  {label: '不包含于', value: 'not in'},
-  {label: '不为空', value: '!=null'}
-]);
+// const matchMap = reactive([
+//   {label: '等于', value: '=='},
+//   {label: '大于等于', value: '>='},
+//   {label: '小于等于', value: '<='},
+//   {label: '不等于', value: '!='},
+//   {label: '包含于', value: 'in'},
+//   {label: '不包含于', value: 'not in'},
+//   {label: '不为空', value: '!=null'}
+// ]);
 
 const typeMap = reactive([
   {label: "字符串", value: "str"},
   {label: "整数", value: "int"},
   {label: "数组", value: "list"}
 ]);
-
+function getOperators() {
+  system.getOperatorAction()
+}
 function addRuleToGroup(groupIndex: number) {
   const group = prop.expressItem[groupIndex];
   if (group) {

@@ -121,6 +121,12 @@ function sumbitAction() {
           delete submitData[item.prop]
         }
       })
+      // 新增：处理字符串字段的 \n 和 \t
+      Object.keys(submitData).forEach(key => {
+        if (typeof submitData[key] === 'string') {
+          submitData[key] = submitData[key].replace(/\s/g, '')
+        }
+      })
       const value = processEmptyString(submitData)
       emit("sumbitAction", editMode, value)
     } else {
@@ -211,7 +217,7 @@ defineExpose(expose)
         </template>
         <template v-else-if="item.type==='suitCase'">
           <el-form-item v-bind="item">
-            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="cascaderOptionsMap"></CommonSuitCase>
+            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="cascaderOptionsMap" :propData="item.cascader"></CommonSuitCase>
           </el-form-item>
         </template>
         <template v-if="item.type==='Cascader'">

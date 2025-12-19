@@ -6,8 +6,6 @@ interface caseType{
     is_last: boolean
 }
 
-const system = systemStore()
-
 const addConfig = {
     pageName: "suit",
     title: "套件",
@@ -39,7 +37,8 @@ const addConfig = {
                 checkOnClickNode: true,
                 multiple: true, // 多选
                 emitPath: false, // 是否返回完整路径
-                checkStrictly: false // 是否严格的遵守父子不互相关联
+                checkStrictly: false, // 是否严格的遵守父子不互相关联
+                associated: false
             },
             placeholder: "请选择用例",
             prop: "caseInfo",

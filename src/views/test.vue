@@ -1,71 +1,284 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import {ref} from "vue";
 
-import type { DrawerProps } from 'element-plus'
-
-const drawer = ref(false)
-const drawer2 = ref(false)
-const direction = ref<DrawerProps['direction']>('rtl')
-const radio1 = ref('Option 1')
-const handleClose = (done: () => void) => {
-  ElMessageBox.confirm('Are you sure you want to close this?')
-      .then(() => {
-        done()
-      })
-      .catch(() => {
-        // catch error
-      })
-}
-function cancelClick() {
-  drawer2.value = false
-}
-function confirmClick() {
-  ElMessageBox.confirm(`Are you confirm to chose ${radio1.value} ?`)
-      .then(() => {
-        drawer2.value = false
-      })
-      .catch(() => {
-        // catch error
-      })
-}
+const options = [
+  {
+    value: 'guide',
+    label: 'Guide',
+    disabled: true,
+    children: [
+      {
+        value: 'disciplines',
+        label: 'Disciplines',
+        children: [
+          {
+            value: 'consistency',
+            label: 'Consistency',
+          },
+          {
+            value: 'feedback',
+            label: 'Feedback',
+          },
+          {
+            value: 'efficiency',
+            label: 'Efficiency',
+          },
+          {
+            value: 'controllability',
+            label: 'Controllability',
+          },
+        ],
+      },
+      {
+        value: 'navigation',
+        label: 'Navigation',
+        children: [
+          {
+            value: 'side nav',
+            label: 'Side Navigation',
+          },
+          {
+            value: 'top nav',
+            label: 'Top Navigation',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'component',
+    label: 'Component',
+    children: [
+      {
+        value: 'basic',
+        label: 'Basic',
+        children: [
+          {
+            value: 'layout',
+            label: 'Layout',
+          },
+          {
+            value: 'color',
+            label: 'Color',
+          },
+          {
+            value: 'typography',
+            label: 'Typography',
+          },
+          {
+            value: 'icon',
+            label: 'Icon',
+          },
+          {
+            value: 'button',
+            label: 'Button',
+          },
+        ],
+      },
+      {
+        value: 'form',
+        label: 'Form',
+        children: [
+          {
+            value: 'radio',
+            label: 'Radio',
+          },
+          {
+            value: 'checkbox',
+            label: 'Checkbox',
+          },
+          {
+            value: 'input',
+            label: 'Input',
+          },
+          {
+            value: 'input-number',
+            label: 'InputNumber',
+          },
+          {
+            value: 'select',
+            label: 'Select',
+          },
+          {
+            value: 'cascader',
+            label: 'Cascader',
+          },
+          {
+            value: 'switch',
+            label: 'Switch',
+          },
+          {
+            value: 'slider',
+            label: 'Slider',
+          },
+          {
+            value: 'time-picker',
+            label: 'TimePicker',
+          },
+          {
+            value: 'date-picker',
+            label: 'DatePicker',
+          },
+          {
+            value: 'datetime-picker',
+            label: 'DateTimePicker',
+          },
+          {
+            value: 'upload',
+            label: 'Upload',
+          },
+          {
+            value: 'rate',
+            label: 'Rate',
+          },
+          {
+            value: 'form',
+            label: 'Form',
+          },
+        ],
+      },
+      {
+        value: 'data',
+        label: 'Data',
+        children: [
+          {
+            value: 'table',
+            label: 'Table',
+          },
+          {
+            value: 'tag',
+            label: 'Tag',
+          },
+          {
+            value: 'progress',
+            label: 'Progress',
+          },
+          {
+            value: 'tree',
+            label: 'Tree',
+          },
+          {
+            value: 'pagination',
+            label: 'Pagination',
+          },
+          {
+            value: 'badge',
+            label: 'Badge',
+          },
+        ],
+      },
+      {
+        value: 'notice',
+        label: 'Notice',
+        children: [
+          {
+            value: 'alert',
+            label: 'Alert',
+          },
+          {
+            value: 'loading',
+            label: 'Loading',
+          },
+          {
+            value: 'message',
+            label: 'Message',
+          },
+          {
+            value: 'message-box',
+            label: 'MessageBox',
+          },
+          {
+            value: 'notification',
+            label: 'Notification',
+          },
+        ],
+      },
+      {
+        value: 'navigation',
+        label: 'Navigation',
+        children: [
+          {
+            value: 'menu',
+            label: 'Menu',
+          },
+          {
+            value: 'tabs',
+            label: 'Tabs',
+          },
+          {
+            value: 'breadcrumb',
+            label: 'Breadcrumb',
+          },
+          {
+            value: 'dropdown',
+            label: 'Dropdown',
+          },
+          {
+            value: 'steps',
+            label: 'Steps',
+          },
+        ],
+      },
+      {
+        value: 'others',
+        label: 'Others',
+        children: [
+          {
+            value: 'dialog',
+            label: 'Dialog',
+          },
+          {
+            value: 'tooltip',
+            label: 'Tooltip',
+          },
+          {
+            value: 'popover',
+            label: 'Popover',
+          },
+          {
+            value: 'card',
+            label: 'Card',
+          },
+          {
+            value: 'carousel',
+            label: 'Carousel',
+          },
+          {
+            value: 'collapse',
+            label: 'Collapse',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'resource',
+    label: 'Resource',
+    children: [
+      {
+        value: 'axure',
+        label: 'Axure Components',
+      },
+      {
+        value: 'sketch',
+        label: 'Sketch Templates',
+      },
+      {
+        value: 'docs',
+        label: 'Design Documentation',
+      },
+    ],
+  },
+]
+const props = { multiple: true }
+let defaultData = ref([])
+defaultData.value=[["component", "basic", "layout"],["component", "basic", "color"]]
 </script>
 <template>
-  <el-button type="primary" style="margin-left: 16px" @click="drawer = true">
-    open
-  </el-button>
-  <el-button type="primary" style="margin-left: 16px" @click="drawer2 = true">
-    with footer
-  </el-button>
-
-  <el-drawer
-      v-model="drawer"
-      title="I am the title"
-      direction="btt"
-      :before-close="handleClose"
-  >
-    <span>Hi, there!</span>
-  </el-drawer>
-  <el-drawer v-model="drawer2" :direction="direction">
-    <template #header>
-      <h4>set title by slot</h4>
-    </template>
-    <template #default>
-      <div>
-        <el-radio v-model="radio1" value="Option 1" size="large">
-          Option 1
-        </el-radio>
-        <el-radio v-model="radio1" value="Option 2" size="large">
-          Option 2
-        </el-radio>
-      </div>
-    </template>
-    <template #footer>
-      <div style="flex: auto">
-        <el-button @click="cancelClick">cancel</el-button>
-        <el-button type="primary" @click="confirmClick">confirm</el-button>
-      </div>
-    </template>
-  </el-drawer>
+  <el-cascader
+      v-model="defaultData"
+      :options="options"
+      :props="props"
+  />
 </template>
 

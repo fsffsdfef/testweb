@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {Add, Del, Update, getPageList} from "@/api/main/system/api.ts";
+import {Add, Del, Update, getPageList, getOperator} from "@/api/main/system/api.ts";
 import {task, reqRun} from "@/api/main/task/api.ts";
 import { ElMessage } from 'element-plus'
 import {ref} from "vue";
@@ -9,7 +9,8 @@ const systemStore = defineStore("system", {
     state: () => ({
         TableList: [],
         pageCount: 0,
-        showData: {}
+        showData: {},
+        operatorMap: {}
 }),
     actions: {
         async getTableListAction(pageName: string, data?:any){
@@ -33,6 +34,11 @@ const systemStore = defineStore("system", {
         async taskAction(data: any) {
             const result = await task(data)
             this.showData = result.data
+            return result.data
+        },
+        async getOperatorAction(){
+            const result = await getOperator()
+            this.operatorMap = result.data
             return result.data
         }
     }

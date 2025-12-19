@@ -28,3 +28,10 @@ export function Update(pageName:string, queryInfo: any){
         data: queryInfo
     })
 }
+
+export function getOperator(){
+    return BaseRequest({
+        url: 'operator/',
+        method: "GET"
+    })
+}

@@ -225,114 +225,114 @@ const handleSubmit = async () => {
 </script>
 <template>
   <div class="cascader-multi-select-config">
-      <!-- 级联选择器 -->
-      <div class="cascader-section">
-        <el-cascader
-            v-model="cascaderValue"
-            :options="optionMap"
-            :props="cascaderProps"
-            clearable
-            filterable
-            placeholder="请选择数据（支持多选）"
-            @change="handleCascaderChange"
-            style="width: 100%"
-        />
-      </div>
-      <!-- 已选数据列表及配置 -->
-      <div v-if="suitCase.length > 0" class="selected-items-section">
-        <el-divider content-position="left">
-          <span>已选数据及配置 ({{ suitCase.length }})</span>
-        </el-divider>
+    <!-- 级联选择器 -->
+    <div class="cascader-section">
+      <el-cascader
+          v-model="cascaderValue"
+          :options="optionMap"
+          :props="cascaderProps"
+          clearable
+          filterable
+          placeholder="请选择数据（支持多选）"
+          @change="handleCascaderChange"
+          style="width: 100%"
+      />
+    </div>
+    <!-- 已选数据列表及配置 -->
+    <div v-if="suitCase.length > 0" class="selected-items-section">
+      <el-divider content-position="left">
+        <span>已选数据及配置 ({{ suitCase.length }})</span>
+      </el-divider>
 
-        <div class="items-list">
-          <el-card
-              v-for="(item, index) in suitCase"
-              :key="item.id"
-              class="item-card"
-              shadow="hover"
-          >
-            <template #header>
-              <div class="item-header">
-                <div class="item-title">
-                  <span class="item-label">{{ item.label }}</span>
-                </div>
-                <el-button
-                    type="danger"
-                    size="small"
-                    :icon="Delete"
-                    @click="removeItem(item.id)"
-                >
-                  删除
-                </el-button>
+      <div class="items-list">
+        <el-card
+            v-for="(item, index) in suitCase"
+            :key="item.id"
+            class="item-card"
+            shadow="hover"
+        >
+          <template #header>
+            <div class="item-header">
+              <div class="item-title">
+                <span class="item-label">{{ item.label }}</span>
               </div>
-            </template>
+              <el-button
+                  type="danger"
+                  size="small"
+                  :icon="Delete"
+                  @click="removeItem(item.id)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
 
-            <!-- 配置表单 -->
-            <el-form
-                :model="item"
-                label-width="140px"
-                class="config-form"
-            >
-              <el-form-item label="用例ID">
-                <el-text>{{item.caseId}}</el-text>
-              </el-form-item>
+          <!-- 配置表单 -->
+          <el-form
+              :model="item"
+              label-width="140px"
+              class="config-form"
+          >
+            <el-form-item label="用例ID">
+              <el-text>{{item.caseId}}</el-text>
+            </el-form-item>
 
-              <el-form-item label="执行顺序" prop="execution_order">
-                <el-input-number
-                    v-model="item.execution_order"
-                    :min="0"
-                    :precision="0"
-                    controls-position="right"
-                    placeholder="请输入执行顺序"
-                    style="width: 100%"
-                />
-              </el-form-item>
+            <el-form-item label="执行顺序" prop="execution_order">
+              <el-input-number
+                  v-model="item.execution_order"
+                  :min="0"
+                  :precision="0"
+                  controls-position="right"
+                  placeholder="请输入执行顺序"
+                  style="width: 100%"
+              />
+            </el-form-item>
 
-              <el-form-item label="是否首个">
-                <el-switch v-model="item.is_first" />
-                <span style="margin-left: 8px; color: #909399; font-size: 12px">
+            <el-form-item label="是否首个">
+              <el-switch v-model="item.is_first" />
+              <span style="margin-left: 8px; color: #909399; font-size: 12px">
                   {{ item.is_first ? 'true' : 'false' }}
                 </span>
-              </el-form-item>
+            </el-form-item>
 
-              <el-form-item label="是否最后">
-                <el-switch v-model="item.is_last" />
-                <span style="margin-left: 8px; color: #909399; font-size: 12px">
+            <el-form-item label="是否最后">
+              <el-switch v-model="item.is_last" />
+              <span style="margin-left: 8px; color: #909399; font-size: 12px">
                   {{ item.is_last ? 'true' : 'false' }}
                 </span>
-              </el-form-item>
+            </el-form-item>
 
-              <!-- 配置预览 -->
-<!--              <el-form-item label="配置预览">-->
-<!--                <div class="config-preview">-->
-<!--                  <pre>{{ formatConfigPreview(item) }}</pre>-->
-<!--                </div>-->
-<!--              </el-form-item>-->
-            </el-form>
-          </el-card>
-        </div>
+            <!-- 配置预览 -->
+            <!--              <el-form-item label="配置预览">-->
+            <!--                <div class="config-preview">-->
+            <!--                  <pre>{{ formatConfigPreview(item) }}</pre>-->
+            <!--                </div>-->
+            <!--              </el-form-item>-->
+          </el-form>
+        </el-card>
       </div>
-      <!-- 提交区域 -->
-      <div v-if="selectedItems.length > 0" class="submit-section">
-        <el-divider />
-        <div class="submit-actions">
-          <el-button
-              type="info"
-              :icon="View"
-              @click="previewSubmitData"
-          >
-            预览提交数据
-          </el-button>
-          <el-button
-              type="primary"
-              :icon="Check"
-              @click="handleSubmit"
-              :disabled="!canSubmit"
-          >
-            提交数据
-          </el-button>
-        </div>
+    </div>
+    <!-- 提交区域 -->
+    <div v-if="selectedItems.length > 0" class="submit-section">
+      <el-divider />
+      <div class="submit-actions">
+        <el-button
+            type="info"
+            :icon="View"
+            @click="previewSubmitData"
+        >
+          预览提交数据
+        </el-button>
+        <el-button
+            type="primary"
+            :icon="Check"
+            @click="handleSubmit"
+            :disabled="!canSubmit"
+        >
+          提交数据
+        </el-button>
       </div>
+    </div>
     <!-- 提交数据预览对话框 -->
     <el-dialog
         v-model="previewDialogVisible"
