@@ -1,0 +1,23 @@
+src/common/module/table/drawer/ReqActionDataModel.vue
+  s_ed0b45e20ec878::t_0f733fc370fdd4 201-210
+src/views/main/task/suit/configs/table-config.ts
+  s_ed0b45e20ec878::t_1adc368687836e 117
+src/stores/main/system/systemStore.ts
+  s_ed0b45e20ec878::t_34bc2e991b8928 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "83d9f283ce1539bc929fff34c763cc9006340502",
+  "prompts": {},
+  "sessions": {
+    "s_ed0b45e20ec878": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "36f94a40-3242-42c6-a5ad-35ae72e3e7bc",
+        "model": "default"
+      },
+      "human_author": "fsw <Fsw950602@163.com>"
+    }
+  }
+}
