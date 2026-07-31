@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import {ref, reactive} from "vue";
 import type { ComponentSize } from 'element-plus'
 import {storeToRefs} from "pinia";
 import systemStore from "@/stores/main/system/systemStore.ts";
 const system = systemStore()
 const {pageCount, page, size} = storeToRefs(system)
+
 
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -22,6 +23,10 @@ function getPageInfo(){
   const size = pageSize.value
   const page = (currentPage.value)
   return {size, page}
+}
+
+function changeData(){
+
 }
 </script>
 

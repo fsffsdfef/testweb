@@ -7,6 +7,7 @@ import type {tableProps} from "@/common/types/main/type.ts";
 import {dayJS} from "@/utils/dataformat.ts";
 import {copy} from "@/utils/copy.ts";
 import router from "@/router";
+import { formatScheduleDesc } from '@/utils/scheduleUtil.ts'
 
 const queryInfo = {}
 const props = defineProps<tableProps>()
@@ -22,8 +23,8 @@ function addAction(edit="create") {
 function editAction(edit, data) {
   emit('editAction', edit, data)
 }
-function operation(data, show=true) {
-  emit('operation', data, show)
+function operation(data, action = 'submitTask') {
+  emit('operation', data, action)
 }
 // 列表数据增删改查
 function addTable(data) {
@@ -38,6 +39,15 @@ function delTable(data) {
   }
   system.delAction(props.config.pageName, queryInfo)
 }
+function batch_del(data) {
+  if (Array.isArray(data)){
+    queryInfo["ids"] = data
+  }
+  else{
+    console.log("你有问题")
+  }
+  system.delAction(props.config.pageName, queryInfo)
+}
 function updateTable(data) {
   system.updateAction(props.config.pageName, data)
 }
@@ -48,14 +58,24 @@ function handleSelectionChange(val){
   const data = val.map(item => item[props.config.key])
   multipleSelection.value = data
 }
-
+function handleSelectionAll(val){
+  const data = val.map(item => item[props.config.key])
+  multipleSelection.value = data
+}
 // 使用计算属性
 const actionHandlers = computed(() => ({
-  submitTask: operation,
+  submitTask: (data: any) => {
+    const btn = props.config.table.btn?.find((b: any) => b.action === 'submitTask')
+    operation(data, btn?.silent ? 'submitTaskSilent' : 'submitTask')
+  },
+  viewTaskDetail: (data: any) => operation(data, 'viewTaskDetail'),
+  viewPeriodicTaskHistory: (data: any) => operation(data, 'viewPeriodicTaskHistory'),
   add: addAction,
   edit: editAction,
 }))
-
+function demo(data){
+  console.log(data)
+}
 async function handleClick(actionType, data?:any) {
    await actionHandlers.value[actionType]?.(data)
 }
@@ -88,7 +108,7 @@ defineExpose(expose)
 
     <div class="tool">
       <div v-show="multipleSelection.length>0" style="padding-right: 15px;">
-        <el-button type="danger" :icon="Delete" @click="delTable(multipleSelection)">批量删除</el-button>
+        <el-button type="danger" :icon="Delete" @click="batch_del(multipleSelection)">批量删除</el-button>
       </div>
       <div v-for="btn in config.tools.btnList" style="padding-right: 15px;">
         <el-button type="primary" :icon="btn.icon" @click="handleClick(btn.type)">新增{{btn.name}}</el-button>
@@ -103,6 +123,7 @@ defineExpose(expose)
         stripe
         header-cell-class-name="headerCellClassName"
         @selection-change="handleSelectionChange"
+        @select-all="handleSelectionAll"
         style="width: 100%">
       <template v-for="col in config.table.props" :key="config.key">
         <template v-if="col.type === 'selection'">
@@ -112,12 +133,29 @@ defineExpose(expose)
           <el-table-column type="expand">
             <template #default="scope">
               <div v-if="col.key==='expressItem'">
-                <div v-for="(item, index) in scope.row['expressItem'][0]['expressList']" :key="index">
-                  <label>规则(ID{{ item.expressId }})</label>
-                  <span style="padding-left: 10px">{{ item.keyType }}[{{ item.matchKey }}]</span>
-                  <span style="padding-left: 10px">{{ item.matchOper }}</span>
-                  <span style="padding-left: 10px">{{ item.matchValue }}</span>
+                <div class="assertGroup">
+                  <div v-for="(group, groupIndex) in scope.row['expressItem']" :key="groupIndex">
+                    <el-card style="max-width: 100%; height: 100%">
+                      <template #header>
+                        <div class="card-header">
+                          <span>规则组ID{{group.expressItemId}}</span>
+                        </div>
+                      </template>
+                      <div class="assertItem">
+                        <div v-for="(item, index) in group.expressList" :key="index">
+                          <div>规则(ID{{ item.expressId }})</div>
+                          <div>
+                            <span>{{ item.keyType }}[{{ item.matchKey }}]</span>
+                            <span style="padding-left: 10px">{{ item.matchOper }}</span>
+                            <span style="padding-left: 10px">{{ item.matchValue }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </el-card>
+
                 </div>
+                </div>
+
               </div>
               <div v-else>
                 <div style="margin: 20px 20px 20px 20px">
@@ -157,6 +195,13 @@ defineExpose(expose)
             </template>
           </el-table-column>
         </template>
+        <template v-else-if="col.type === 'scheduleDesc'">
+          <el-table-column v-bind="col" align="center" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ formatScheduleDesc(row) }}
+            </template>
+          </el-table-column>
+        </template>
         <template v-else-if="col.type === 'time'">
           <el-table-column v-bind="col" align="center">
             <template #default="scope">
@@ -178,6 +223,18 @@ defineExpose(expose)
               </el-tag>
             </template>
           </el-table-column>
+        </template>
+        <template v-else-if="col.type === 'switch'">
+          <el-table-column v-bind="col" align="center">
+            <template #default="scope">
+              <el-switch
+                  @change="updateTable(scope.row)"
+                  v-model="scope.row[col.prop]"
+              />
+            </template>
+
+          </el-table-column>
+
         </template>
         <template v-else-if="col.type === 'obj'">
           <el-table-column
@@ -253,5 +310,19 @@ defineExpose(expose)
 
 ，headerCellClassName {
   background-color: #2c3e50;
+}
+
+.assertGroup {
+  display: flex;
+  flex-direction: row;
+  align-content: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-left: 20px;
+}
+.assertItem {
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
 }
 </style>

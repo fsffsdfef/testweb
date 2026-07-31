@@ -70,11 +70,6 @@ const httpCaseConfig = {
             },
             {
                 type: "obj",
-                prop: "headers",
-                label: "请求头"
-            },
-            {
-                type: "obj",
                 prop: "body",
                 label: "请求体"
             },

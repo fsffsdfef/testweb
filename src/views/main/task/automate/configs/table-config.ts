@@ -1,6 +1,6 @@
 import {Upload, CirclePlus, List, Download, Search} from "@element-plus/icons-vue";
 
-const suitConfig = {
+const automateConfig = {
     pageName: "suit",
     key: "suitId",
     expandKey: "caseId",
@@ -40,9 +40,9 @@ const suitConfig = {
                 key: "caseInfo",
                 props: [
                     {
-                      type: "text",
-                      prop: "execution_order",
-                      label: "序列"
+                        type: "text",
+                        prop: "execution_order",
+                        label: "序列"
                     },
                     {
                         type: "text",
@@ -70,9 +70,6 @@ const suitConfig = {
                         label: "是否是后置用例"
                     }
                 ]
-            },
-            {
-                type: "selection"
             },
             {
                 type: "text",
@@ -103,15 +100,10 @@ const suitConfig = {
         btn: [
             {
                 action: "submitTask",
-                name: "运行",
-                silent: true
-            },
-            {
-                action: "viewTaskDetail",
-                name: "详情"
+                name: "运行套件"
             }
         ]
     },
 }
 
-export default suitConfig
+export default automateConfig

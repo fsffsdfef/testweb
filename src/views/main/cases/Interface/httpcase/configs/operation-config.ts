@@ -81,6 +81,13 @@ const addConfig = {
             isIndex: false
         },
         {
+            type: "single",
+            label: "变量类型是否为json",
+            prop: "varType",
+            initialValue: false,
+            isIndex: false
+        },
+        {
             type: "Cascader",
             label: "接口",
             cascader: {

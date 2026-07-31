@@ -27,7 +27,7 @@ import TopView from "@/views/top/TopView.vue";
 }
 
 .aside {
-
+  border-right: 2px solid #ffffff;
 }
 
 .header {

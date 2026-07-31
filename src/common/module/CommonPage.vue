@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import CommonTable, {type CommonTableExpose} from "@/common/module/table/CommonTable.vue";
 import CommonSearch from "@/common/module/table/CommonSearch.vue";
 import CommonModel, {type CommonModelExpose}from "@/common/module/operate/CommonModel.vue";
 import ReqActionDataModel, {type ReqDataModelExpose} from "@/common/module/table/drawer/ReqActionDataModel.vue";
 import CommonPaginator from "@/common/module/table/CommonPaginator.vue";
+import interfaceCase from "@/stores/main/case/interfaceCase";
 
 
+interface  searchDataType {
+  size: number
+  page: number
+  any?: any
+}
 interface PageConfig {
   tableConfig: any;
   operationConfig: any;
@@ -19,8 +25,14 @@ const contentRef = ref<CommonTableExpose>();
 const modelRef = ref<CommonModelExpose>();
 const reqDataRef = ref<ReqDataModelExpose>()
 
+const searchDate = reactive<searchDataType>({
+  page: 1,
+  size: 10
+})
+
 // 通用方法
 function search(data: any) {
+
   contentRef.value?.getTable(data);
 }
 
@@ -40,8 +52,8 @@ function updateEditModel(edit: string, data?: any) {
   modelRef.value?.changeDialog(edit, data);
 }
 
-function updateReqModel(data, show) {
-  reqDataRef.value?.getReqData(data, show)
+function updateReqModel(data: any, action = 'submitTask') {
+  reqDataRef.value?.handleAction(data, action)
 }
 function modelSubmit(edit: string, data: any) {
   if (edit.value === 'edit') {

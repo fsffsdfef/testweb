@@ -6,7 +6,7 @@ import type {addProps} from "@/common/types/main/type.ts";
 import {localCache} from "@/utils/localcache.ts";
 import CommonExpresses from "@/common/module/operate/CommonExpresses.vue";
 import CommonSuitCase from "@/common/module/operate/CommonSuitCase.vue";
-import {cascaderOptions, loadSelectOptions, processEmptyString} from "@/utils/formUtil.ts";
+import { cascaderOptions, markOnlyLeafSelectable, loadSelectOptions, processEmptyString } from '@/utils/formUtil.ts'
 
 const optionsMap = reactive([])
 const props = defineProps<addProps>()
@@ -35,7 +35,13 @@ const handleClose = (done: () => void) => {
         // catch error
       })
 }
-const cascaderOptionsMap = cascaderOptions(localCache.getCache("depart").list, props)
+const cascaderOptionsMap = computed(() => {
+  const depart = localCache.getCache('depart')
+  return cascaderOptions(depart?.list ?? [], props)
+})
+const suitCaseOptionsMap = computed(() => {
+  return markOnlyLeafSelectable(cascaderOptionsMap.value)
+})
 
 const emit = defineEmits(['sumbitAction'])
 
@@ -232,7 +238,7 @@ defineExpose(expose)
         </template>
         <template v-else-if="item.type==='suitCase'">
           <el-form-item v-bind="item">
-            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="cascaderOptionsMap"></CommonSuitCase>
+            <CommonSuitCase :suit-case="formItem[item.prop]" :option-map="suitCaseOptionsMap"></CommonSuitCase>
           </el-form-item>
         </template>
         <template v-if="item.type==='Cascader'">

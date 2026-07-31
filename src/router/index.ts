@@ -27,7 +27,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/test',
     name: 'test',
     meta: {title: "测试"},
-    component: () => import('@/views/jsonTreeDemo.vue'),
+    component: () => import('@/views/test.vue'),
   },
   {
     path: '/about',
@@ -76,29 +76,29 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: "/case",
+    path: "/cases",
     name: "case",
     meta: {title: "用例管理"},
     component: ()=>import("@/views/index.vue"),
     children: [
       {
-        path: "http",
-        name: "http",
-        meta: {title: "http接口用例"},
+        path: "portcase",
+        name: "portcase",
+        meta: {title: "接口用例"},
         component: ()=>import("@/views/main/cases/Interface/httpcase/index.vue"),
       }
     ]
   },
   {
-    path: "/task",
-    name: "task",
-    meta: {title: "自动化管理"},
+    path: "/suit",
+    name: "suit",
+    meta: {title: "套件管理"},
     component: ()=>import("@/views/index.vue"),
     children: [
       {
-        path: "suit",
-        name: "suit",
-        meta: {title: "套件管理"},
+        path: "portsuit",
+        name: "portsuit",
+        meta: {title: "接口套件"},
         component: ()=>import("@/views/main/task/suit/index.vue")
       },
       {
@@ -106,6 +106,20 @@ const routes: Array<RouteRecordRaw> = [
         name: "port1",
         meta: {title: "接口自动化"},
         component: ()=>import("@/views/test.vue"),
+      }
+    ]
+  },
+  {
+    path: "/task",
+    name: "task",
+    meta: {title: "任务管理"},
+    component: ()=>import("@/views/index.vue"),
+    children: [
+      {
+        path: "porttask",
+        name: "porttask",
+        meta: {title: "接口任务"},
+        component: ()=>import("@/views/main/task/port/index.vue"),
       }
     ]
   }

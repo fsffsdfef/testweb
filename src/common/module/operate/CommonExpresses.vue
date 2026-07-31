@@ -8,7 +8,6 @@ import {storeToRefs} from "pinia";
 const system = systemStore()
 getOperators()
 const {operatorMap} = storeToRefs(system)
-console.log("operatorMap", operatorMap.value)
 const matchMap = computed(()=>{
   return Object.entries(operatorMap.value).map(([op, name]) => ({
     label: name,
@@ -43,18 +42,11 @@ const formItem = reactive<RuleGroup[]>([
   }
 ]);
 const matchMethodMap = reactive([
+  {label: '默认', value: '0'},
   {label: '长度', value: 'len'},
   {label: '总和', value: 'sum'}
 ])
-// const matchMap = reactive([
-//   {label: '等于', value: '=='},
-//   {label: '大于等于', value: '>='},
-//   {label: '小于等于', value: '<='},
-//   {label: '不等于', value: '!='},
-//   {label: '包含于', value: 'in'},
-//   {label: '不包含于', value: 'not in'},
-//   {label: '不为空', value: '!=null'}
-// ]);
+
 
 const typeMap = reactive([
   {label: "字符串", value: "str"},
@@ -84,7 +76,7 @@ function addGroup() {
       {
         matchKey: "",
         keyType: "",
-        matchMethod: null,
+        matchMethod: "0",
         matchValue: "",
         matchValueType: "",
         matchOper: ""
@@ -154,6 +146,19 @@ function changeDialogVisible(){
                   clearable
               />
               <el-select
+                  v-show="rule.matchOper != '!=null'"
+                  v-model="rule.matchMethod"
+                  placeholder="运算"
+                  clearable
+              >
+                <el-option
+                    v-for="type in matchMethodMap"
+                    :key="type.value"
+                    :label="type.label"
+                    :value="type.value"
+                />
+              </el-select>
+              <el-select
                   v-model="rule.matchOper"
                   placeholder="校验条件"
                   clearable
@@ -167,12 +172,12 @@ function changeDialogVisible(){
               </el-select>
               <el-select
                   v-show="rule.matchOper != '!=null'"
-                  v-model="rule.matchMethod"
-                  placeholder="运算"
+                  v-model="rule.keyType"
+                  placeholder="字段类型"
                   clearable
               >
                 <el-option
-                    v-for="type in matchMethodMap"
+                    v-for="type in typeMap"
                     :key="type.value"
                     :label="type.label"
                     :value="type.value"
@@ -184,19 +189,6 @@ function changeDialogVisible(){
                     placeholder="预期值"
                     clearable
                 />
-                <el-select
-                    v-show="rule.matchOper != '!=null'"
-                    v-model="rule.keyType"
-                    placeholder="字段类型"
-                    clearable
-                >
-                  <el-option
-                      v-for="type in typeMap"
-                      :key="type.value"
-                      :label="type.label"
-                      :value="type.value"
-                  />
-                </el-select>
 
               <div class="rule-actions">
                 <el-button

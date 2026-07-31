@@ -33,11 +33,12 @@ const addConfig = {
                 value: 'id',
                 label: 'name',
                 children: 'children',
-                multiple: true,
-                emitPath: true,        // 与 CommonSuitCase 保持一致
-                checkStrictly: true,  // 仅最后一层可选
+                showPrefix: false,
                 checkOnClickNode: true,
-                expandTrigger: 'click',
+                multiple: true, // 多选
+                emitPath: false, // 是否返回完整路径
+                checkStrictly: false, // 是否严格的遵守父子不互相关联
+                associated: false
             },
             placeholder: "请选择用例",
             prop: "caseInfo",

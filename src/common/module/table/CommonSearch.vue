@@ -23,28 +23,6 @@ const cascaderProps = {
   checkStrictly: false // 是否严格的遵守父子不互相关联
 }
 const cascaderOptionsMap = cascaderOptions(search, props)
-// 转换数据为级联选择器格式
-// const cascaderOptions = computed(() => {
-//   return search.map(depart => ({
-//     id: depart.departId,
-//     name: depart.departName,
-//     children: depart.apply
-//         .filter(apply => props?.config?.search?.cascade?.apply === true)
-//         .map(apply => ({
-//       id: apply.applyId,
-//       name: apply.applyName,
-//       children: apply.port
-//           .filter(port => props?.config?.search?.cascade?.port === true)
-//           .map(port => ({
-//         id: port.portId,
-//         name: port.portName,
-//         // 可以添加更多属性用于显示
-//         synopsis: port.synopsis,
-//         portPath: port.portPath
-//       }))
-//     }))
-//   }))
-// })
 
 // 处理选择变化
 const handleChange = (value) => {
@@ -90,7 +68,7 @@ function handleRestClick() {
                 clearable
                 filterable
                 :show-all-levels=false
-                @change="handleChange"
+                @change="searchCase"
             />
           </el-form-item>
         </template>
@@ -99,7 +77,7 @@ function handleRestClick() {
             <el-input
                 v-model="initialForm[item.prop]"
                 :placeholder="item.placeholder"
-                @change="handleInputChange"></el-input>
+                @change="searchCase"></el-input>
           </el-form-item>
         </template>
       </template>

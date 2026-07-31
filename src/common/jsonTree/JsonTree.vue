@@ -1,14 +1,18 @@
 <template>
-  <div class="json-tree">
+  <div class="json-tree" :class="{ 'json-tree--embedded': embedded }">
+    <span v-if="showBraces && isObject" class="brace">{</span>
+    <span v-else-if="showBraces && isArray" class="brace">[</span>
     <div class="json-node" v-for="(item, index) in formattedData" :key="index">
-      <JsonNode 
-        :key-name="item.key" 
-        :data="item.value" 
-        :type="item.type"
-        :level="0"
-        :show-comma="item.showComma"
+      <JsonNode
+          :key-name="item.key"
+          :data="item.value"
+          :type="item.type"
+          :level="0"
+          :show-comma="item.showComma"
       />
     </div>
+    <span v-if="showBraces && isObject" class="brace">}</span>
+    <span v-else-if="showBraces && isArray" class="brace">]</span>
   </div>
 </template>
 
@@ -18,10 +22,20 @@ import JsonNode from './JsonNode.vue'
 
 interface Props {
   data: any
+  showBraces?: boolean
+  embedded?: boolean
 }
+const props = withDefaults(defineProps<Props>(), {
+  showBraces: true,
+  embedded: false,
+})
 
-const props = defineProps<Props>()
-
+const isObject = computed(() =>
+    typeof props.data === 'object' &&
+    props.data !== null &&
+    !Array.isArray(props.data)
+)
+const isArray = computed(() => Array.isArray(props.data))
 const formattedData = computed(() => {
   if (Array.isArray(props.data)) {
     const items = props.data.map((item, index) => ({
@@ -66,8 +80,36 @@ function getType(value: any): string {
   font-size: 14px;
   line-height: 1.6;
   padding: 10px;
-  background-color:	#F5FFFA;
+  background-color: #F5FFFA;
   border-radius: 4px;
+  max-height: 500px;
+  overflow: auto;
+  white-space: pre-wrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.json-tree::-webkit-scrollbar {
+  display: none;
+}
+
+/* 详情页：在 json-tree 层内部滚动 */
+.json-tree--embedded {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.json-tree--embedded::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 </style>
-

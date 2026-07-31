@@ -1,173 +1,278 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch, nextTick  } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, View, Check } from '@element-plus/icons-vue'
+import { Delete, View, Check, Right } from '@element-plus/icons-vue'
 
-// 类型定义
 interface CascaderOption {
   id: string | number
   name: string
   children?: CascaderOption[]
 }
 
-interface ItemConfig {
-  caseId: string | number // 选择的value，不可更改
-  execution_order: number // 数字类型
-  is_first: boolean // bool类型，默认false
-  is_last: boolean // bool类型，默认false
+interface KVItem {
+  key: string
+  value: string
 }
 
 interface SelectedItem {
-  id: string | number // 内部ID，用于列表管理
-  label: string // 显示标签
-  caseId: string | number // 最后选中的值
+  id: string | number
+  label: string
+  caseId: string | number
   execution_order: number
+  globalMap: object
   is_first: boolean
   is_last: boolean
+  is_stream: boolean
+  changeSid: boolean
+  changeSidKey: string
+  streamKey: string
+  selectList: (string | number)[]
+  items: KVItem[]
+  case?: { caseId?: number; caseName?: string }
 }
-interface RuleGroup {
-  casesList: ItemConfig[];
-}
-// Props
-const props = defineProps<{suitCase: SelectedItem[]; optionMap: CascaderOption[]}>()
-console.log("case", props.suitCase)
-// Emits
+
+const props = defineProps<{
+  suitCase: SelectedItem[]
+  optionMap: CascaderOption[]
+  cascaderConfig?: Record<string, any>
+}>()
+
 const emit = defineEmits<{
   submit: [data: any]
 }>()
 
-// 级联选择器配置
 const cascaderProps = reactive({
-  multiple: true, // 支持多选
-  emitPath: false, // 只返回最后一个节点值，不返回完整路径
-  expandTrigger: 'hover' as const,
-  value: 'id', // 使用 id 作为值字段
-  label: 'name', // 使用 name 作为标签字段
-  children: 'children' // children 字段名
+  multiple: true,
+  emitPath: true,
+  checkStrictly: true,
+  checkOnClickNode: false,
+  expandTrigger: 'click' as const,
+  value: 'id',
+  label: 'name',
+  children: 'children',
 })
 
-// 级联选择器的值（一维数组，只存储最后一个值）
 const cascaderValue = ref<(string | number)[]>([])
-
-// 已选中的数据项列表
+const isSyncingFromCascader = ref(false)
 const selectedItems = ref<SelectedItem[]>([])
 
-// ID 计数器
-let idCounter = 0
 
-// 处理级联选择器变化
-const handleCascaderChange = (value: (string | number)[] | null) => {
+function normalizePath(path: (string | number)[]) {
+  return path.map(id => String(id))
+}
+function buildLabelFromPath(path: (string | number)[], options: CascaderOption[]): string {
+  if (!path?.length) return ''
+  const names: string[] = []
+  let nodes = options
+  for (const id of path) {
+    const node = nodes.find(o => String(o.id) === String(id))
+    if (!node) break
+    names.push(node.name)
+    nodes = node.children ?? []
+  }
+  return names.join(' / ')
+}
 
-  // value 现在是一维数组，每个元素是最后一个节点的值
-  const currentLastValues = value || []
-
-  // 找出新增的值（不在selectedItems中的）
-  const existingCaseIds = props.suitCase.map(item => item.caseId)
-
-  currentLastValues.forEach((caseId) => {
-    if (!existingCaseIds.includes(caseId)) {
-      // 新增的数据项
-      addItem(caseId)
+function findPathByCaseId(
+    caseId: string | number,
+    options: CascaderOption[],
+    path: (string | number)[] = []
+): (string | number)[] {
+  for (const option of options) {
+    const newPath = [...path, option.id]
+    if (!option.children?.length) {
+      if (String(option.id) === String(caseId)) return newPath
+    } else {
+      const found = findPathByCaseId(caseId, option.children, newPath)
+      if (found.length) return found
     }
-    else {
-      console.log("存在")
+  }
+  return []
+}
+
+function findLabelByLastValue(
+    lastValue: string | number,
+    options: CascaderOption[]
+): string {
+  for (const option of options) {
+    if (String(option.id) === String(lastValue)) {
+      return option.name
+    }
+    if (option.children?.length) {
+      const label = findLabelByLastValue(lastValue, option.children)
+      if (label) return option.name + ' / ' + label
+    }
+  }
+  return ''
+}
+
+function syncCascaderFromSuitCase() {
+  if (!props.optionMap?.length) {
+    cascaderValue.value = []
+    return
+  }
+  cascaderValue.value = (props.suitCase ?? [])
+      .map(item => {
+        if (Array.isArray(item.selectList) && item.selectList.length >= 4) {
+          return normalizePath(item.selectList)
+        }
+        const path = findPathByCaseId(
+            item.caseId ?? item.case?.caseId,
+            props.optionMap
+        )
+        return path.length ? normalizePath(path) : null
+      })
+      .filter(Boolean) as string[][]
+}
+
+// 编辑回显：optionMap 加载完成时同步一次
+watch(
+    () => props.optionMap?.length,
+    () => {
+      if (props.optionMap?.length && props.suitCase?.length) {
+        syncCascaderFromSuitCase()
+      }
+    },
+    { immediate: true }
+)
+// 外部赋值（编辑弹窗打开）时同步，勾选过程中跳过
+watch(
+    () => props.suitCase,
+    () => {
+      if (isSyncingFromCascader.value) return
+      if (props.optionMap?.length) {
+        syncCascaderFromSuitCase()
+      }
+    },
+    { deep: true }
+)
+/** 必须是 4 层且最后一层是叶子（用例） */
+function isCaseLeafPath(path: (string | number)[], options: CascaderOption[]): boolean {
+  if (path.length !== 4) return false
+  let nodes = options
+  for (let i = 0; i < path.length; i++) {
+    const node = nodes.find(n => String(n.id) === String(path[i]))
+    if (!node) return false
+    if (i === path.length - 1) {
+      return !node.children || node.children.length === 0
+    }
+    nodes = node.children ?? []
+  }
+  return false
+}
+const handleCascaderChange = (value: string[][] | null) => {
+  isSyncingFromCascader.value = true
+  const allPaths = value || []
+  const paths = allPaths.filter(path => isCaseLeafPath(path, props.optionMap))
+  // 非法勾选（父级路径）直接剔除
+  if (paths.length !== allPaths.length) {
+    cascaderValue.value = paths
+  }
+  const currentCaseIds = paths.map(path => String(path[path.length - 1]))
+  const existingCaseIds = props.suitCase.map(item =>
+      String(item.caseId ?? item.case?.caseId)
+  )
+  paths.forEach(path => {
+    const caseId = path[path.length - 1]
+    if (!existingCaseIds.includes(String(caseId))) {
+      addItem(caseId, path, false)
     }
   })
-
-  // 找出需要删除的值（在selectedItems中但不在当前选中中的）
-  // 注意：需要从后往前删除，避免索引问题
   for (let i = props.suitCase.length - 1; i >= 0; i--) {
     const item = props.suitCase[i]
-    const isStillSelected = currentLastValues.includes(item.caseId)
-    if (!isStillSelected) {
+    const id = String(item.caseId ?? item.case?.caseId)
+    if (!currentCaseIds.includes(id)) {
       props.suitCase.splice(i, 1)
     }
   }
+  nextTick(() => {
+    isSyncingFromCascader.value = false
+  })
 }
 
-const findLabelByLastValue = (
-    lastValue: string | number,
-    options: CascaderOption[]
-): string => {
-  for (const option of options) {
-    // 如果当前选项的 id 匹配，且没有子节点，说明找到了
-    if (option.id === lastValue) {
-      return option.name
-    }
+const addItem = (
+    caseId: string | number,
+    path?: (string | number)[],
+    showMessage = true
+) => {
+  const resolvedPath = path?.length
+      ? normalizePath(path)
+      : normalizePath(findPathByCaseId(caseId, props.optionMap))
+  const label =
+      buildLabelFromPath(resolvedPath, props.optionMap) ||
+      findLabelByLastValue(caseId, props.optionMap) ||
+      String(caseId)
+  props.suitCase.push({
+    id: String(caseId),
+    label,
+    caseId: String(caseId),
+    selectList: resolvedPath,
+    execution_order: 0,
+    globalMap: {},
+    is_first: false,
+    is_last: false,
+    is_stream: false,
+    changeSid: false,
+    streamKey: '',
+    changeSidKey: '',
+    items: [],
+  })
+  if (showMessage) {
+    ElMessage.success(`已添加: ${label}`)
+  }
+}
 
-    // 如果有子节点，递归查找
-    if (option.children && option.children.length > 0) {
-      const label = findLabelByLastValue(lastValue, option.children)
-      if (label) {
-        return option.name + ' / ' + label
+
+
+const addkv = (item: SelectedItem) => {
+  if (!item.items) item.items = []
+  item.items.push({ key: '', value: '' })
+  updateGlobalList(item)
+}
+
+const removekv = (item: SelectedItem, index: number) => {
+  if (item.items) {
+    item.items.splice(index, 1)
+    updateGlobalList(item)
+  }
+}
+
+const updateGlobalList = (item: SelectedItem) => {
+  const obj: Record<string, string> = {}
+  if (item.items) {
+    item.items.forEach(kvItem => {
+      const key = kvItem.key?.trim()
+      if (key) {
+        obj[key] = kvItem.value ?? ''
       }
-    }
+    })
   }
+  item.globalMap = obj
 }
 
-// 添加新项
-const addItem = (caseId: string | number) => {
-  // 根据 caseId 查找标签
-  const label = findLabelByLastValue(caseId, props.optionMap)
-  const newItem: SelectedItem = {
-    id: caseId,
-    label: label || String(caseId),
-    caseId: caseId, // 选择的value，不可更改
-    execution_order: 0, // 默认值
-    is_first: false, // 默认false
-    is_last: false // 默认false
-  }
-
-  props.suitCase.push(newItem)
-  ElMessage.success(`已添加: ${newItem.label}`)
-}
-
-// 移除项
-const removeItem = (id: string) => {
-  const index = props.suitCase.findIndex(item => item.id === id)
+const removeItem = (id: string | number) => {
+  const index = props.suitCase.findIndex(item => String(item.id) === String(id))
   if (index > -1) {
     const item = props.suitCase[index]
     ElMessage.success(`已移除: ${item.label}`)
-    selectedItems.value.splice(index, 1)
-
-    // 同步更新级联选择器的值（只更新最后一个值）
-    updateCascaderValue()
+    props.suitCase.splice(index, 1)
+    syncCascaderFromSuitCase()  // 删除后手动同步
   }
 }
 
-// 更新级联选择器的值
 const updateCascaderValue = () => {
-  cascaderValue.value = props.suitCase.map(item => item.caseId)
+  syncCascaderFromSuitCase()
 }
 
-// 格式化配置预览
-const formatConfigPreview = (item: SelectedItem): string => {
-  const config = {
-    标签: item.label,
-    case_id: item.caseId,
-    execution_order: item.execution_order,
-    is_first: item.is_first,
-    is_last: item.is_last
-  }
+const canSubmit = computed(() => props.suitCase.length > 0)
 
-  return JSON.stringify(config, null, 2)
-}
-
-// 是否可以提交
-const canSubmit = computed(() => {
-  return props.suitCase.length > 0
-})
-
-// 提交数据预览
 const previewDialogVisible = ref(false)
 const previewTab = ref('json')
 
-// 格式化提交数据
 const formattedSubmitData = computed(() => {
   return JSON.stringify(buildSubmitData(), null, 2)
 })
 
-// 构建提交数据
 const buildSubmitData = () => {
   return {
     timestamp: new Date().toISOString(),
@@ -177,28 +282,26 @@ const buildSubmitData = () => {
       caseId: item.caseId,
       execution_order: item.execution_order,
       is_first: item.is_first,
-      is_last: item.is_last
-    }))
+      is_last: item.is_last,
+      globalMap: item.globalMap,
+    })),
   }
 }
 
-// 预览提交数据
 const previewSubmitData = () => {
   previewDialogVisible.value = true
   previewTab.value = 'json'
 }
 
-// 复制到剪贴板
 const copyToClipboard = async () => {
   try {
     await navigator.clipboard.writeText(formattedSubmitData.value)
     ElMessage.success('已复制到剪贴板')
-  } catch (err) {
+  } catch {
     ElMessage.error('复制失败，请手动复制')
   }
 }
 
-// 提交数据
 const handleSubmit = async () => {
   try {
     await ElMessageBox.confirm(
@@ -207,38 +310,32 @@ const handleSubmit = async () => {
         {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'warning',
         }
     )
-
-    const submitData = buildSubmitData()
-
-    // 触发提交事件
-    emit('submit', submitData)
-
+    emit('submit', buildSubmitData())
     ElMessage.success('提交成功！')
-    console.log('提交的数据:', submitData)
   } catch {
     // 用户取消
   }
 }
 </script>
+
 <template>
   <div class="cascader-multi-select-config">
-    <!-- 级联选择器 -->
-    <div class="cascader-section">
+    <div class="cascader-section leaf-only-cascader">
       <el-cascader
           v-model="cascaderValue"
           :options="optionMap"
           :props="cascaderProps"
           clearable
           filterable
-          placeholder="请选择数据（支持多选）"
+          placeholder="请选择用例（仅可选用例层）"
           @change="handleCascaderChange"
           style="width: 100%"
       />
     </div>
-    <!-- 已选数据列表及配置 -->
+
     <div v-if="suitCase.length > 0" class="selected-items-section">
       <el-divider content-position="left">
         <span>已选数据及配置 ({{ suitCase.length }})</span>
@@ -246,7 +343,7 @@ const handleSubmit = async () => {
 
       <div class="items-list">
         <el-card
-            v-for="(item, index) in suitCase"
+            v-for="item in suitCase"
             :key="item.id"
             class="item-card"
             shadow="hover"
@@ -254,27 +351,21 @@ const handleSubmit = async () => {
           <template #header>
             <div class="item-header">
               <div class="item-title">
-                <span class="item-label">{{ item.label }}</span>
+                <span class="item-label">{{ item.label || item.case?.caseName }}</span>
               </div>
               <el-button
                   type="danger"
                   size="small"
                   :icon="Delete"
                   @click="removeItem(item.id)"
-              >
-                删除
-              </el-button>
+                  circle
+              />
             </div>
           </template>
 
-          <!-- 配置表单 -->
-          <el-form
-              :model="item"
-              label-width="140px"
-              class="config-form"
-          >
+          <el-form :model="item" label-width="140px" class="config-form">
             <el-form-item label="用例ID">
-              <el-text>{{item.caseId}}</el-text>
+              <el-text>{{ item.caseId || item.case?.caseId }}</el-text>
             </el-form-item>
 
             <el-form-item label="执行顺序" prop="execution_order">
@@ -284,43 +375,78 @@ const handleSubmit = async () => {
                   :precision="0"
                   controls-position="right"
                   placeholder="请输入执行顺序"
-                  style="width: 100%"
               />
             </el-form-item>
 
-            <el-form-item label="是否首个">
+            <el-form-item label="全局变量" prop="globalMap">
+              <div class="kv-wrapper">
+                <div
+                    v-for="(kvItem, kvIndex) in (item.items || [])"
+                    :key="kvIndex"
+                    class="kv-row"
+                >
+                  <div class="kv-key-col">
+                    <el-input
+                        v-model="kvItem.key"
+                        placeholder="输入 key"
+                        @input="updateGlobalList(item)"
+                    />
+                  </div>
+                  <el-icon class="kv-arrow"><Right /></el-icon>
+                  <div class="kv-value-col">
+                    <el-input
+                        v-model="kvItem.value"
+                        placeholder="输入 value"
+                        @input="updateGlobalList(item)"
+                    />
+                  </div>
+                  <el-button
+                      type="danger"
+                      size="small"
+                      :icon="Delete"
+                      circle
+                      @click="removekv(item, kvIndex)"
+                  />
+                </div>
+                <!-- 始终贴在 key 列下方 -->
+                <div class="kv-add-col">
+                  <el-button type="primary" link @click="addkv(item)">添加</el-button>
+                </div>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="更新会话ID">
+              <el-switch v-model="item.changeSid" />
+            </el-form-item>
+
+            <el-form-item v-show="item.changeSid" label="会话key" prop="changeSidKey">
+              <el-input v-model="item.changeSidKey" placeholder="请输入" />
+            </el-form-item>
+
+            <el-form-item label="前置">
               <el-switch v-model="item.is_first" />
-              <span style="margin-left: 8px; color: #909399; font-size: 12px">
-                  {{ item.is_first ? 'true' : 'false' }}
-                </span>
             </el-form-item>
 
-            <el-form-item label="是否最后">
+            <el-form-item label="后置">
               <el-switch v-model="item.is_last" />
-              <span style="margin-left: 8px; color: #909399; font-size: 12px">
-                  {{ item.is_last ? 'true' : 'false' }}
-                </span>
             </el-form-item>
 
-            <!-- 配置预览 -->
-            <!--              <el-form-item label="配置预览">-->
-            <!--                <div class="config-preview">-->
-            <!--                  <pre>{{ formatConfigPreview(item) }}</pre>-->
-            <!--                </div>-->
-            <!--              </el-form-item>-->
+            <el-form-item label="是否循环调用">
+              <el-switch v-model="item.is_stream" />
+            </el-form-item>
+
+            <el-form-item v-show="item.is_stream" label="流式Key" prop="streamKey">
+              <el-input v-model="item.streamKey" placeholder="请输入" />
+            </el-form-item>
           </el-form>
         </el-card>
       </div>
     </div>
-    <!-- 提交区域 -->
+
     <div v-if="selectedItems.length > 0" class="submit-section">
       <el-divider />
       <div class="submit-actions">
-        <el-button
-            type="info"
-            :icon="View"
-            @click="previewSubmitData"
-        >
+        <el-button type="info" :icon="View" @click="previewSubmitData">
           预览提交数据
         </el-button>
         <el-button
@@ -333,96 +459,89 @@ const handleSubmit = async () => {
         </el-button>
       </div>
     </div>
-    <!-- 提交数据预览对话框 -->
-    <el-dialog
-        v-model="previewDialogVisible"
-        title="提交数据预览"
-        width="900px"
-    >
-    </el-dialog>
   </div>
 </template>
-<style scoped>
-.cascader-multi-select-config .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
+<style scoped>
 .cascader-multi-select-config .cascader-section {
   margin-bottom: 20px;
 }
-
 .cascader-multi-select-config .selected-items-section {
   margin-top: 20px;
 }
-
 .cascader-multi-select-config .items-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .cascader-multi-select-config .item-card .item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .cascader-multi-select-config .item-card .item-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-right: 50px;
 }
-
 .cascader-multi-select-config .item-card .item-title .item-label {
   font-weight: 500;
   color: #303133;
 }
-
 .cascader-multi-select-config .item-card .config-form {
   margin-top: 10px;
 }
-
-.cascader-multi-select-config .item-card .config-preview {
-  background-color: #f5f7fa;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 12px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.cascader-multi-select-config .item-card .config-preview pre {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #606266;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
 .cascader-multi-select-config .submit-section {
   margin-top: 20px;
 }
-
 .cascader-multi-select-config .submit-section .submit-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
+.kv-wrapper {
+  width: 100%;
+}
 
-.cascader-multi-select-config .preview-content .json-preview {
-  background-color: #f5f7fa;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 16px;
-  max-height: 500px;
-  overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #303133;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.kv-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.kv-key-col {
+  width: 180px;      /* 与下面 kv-add-col 同宽，保证对齐 */
+  flex-shrink: 0;
+}
+
+.kv-value-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.kv-arrow {
+  flex-shrink: 0;
+  color: #909399;
+}
+
+/* 添加按钮始终在 key 列正下方 */
+.kv-add-col {
+  width: 180px;
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-start;  /* 左对齐 */
+  align-items: center;
+}
+/* 去掉 link 按钮默认左内边距，贴齐 key 输入框 */
+.kv-add-col :deep(.el-button) {
+  margin-left: 0;
+  padding-left: 0;
+}
+/* 非叶子节点隐藏复选框，父级只能展开 */
+.leaf-only-cascader :deep(.el-cascader-panel .el-cascader-node:not(.is-leaf) .el-checkbox) {
+  display: none !important;
+  pointer-events: none !important;
 }
 </style>
